@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2026 Cloud Innovation Day for LG Group — Frontier AI &amp; 3-LLM Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="part-cover">
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav" id="topNav">
+    <div class="nav-brand">
+      <img src="assets/gc_cloud_icon.png" alt="Google Cloud" class="nav-gc-logo" />
+      <span class="brand-title">Innovation Day for LG Group</span>
+      <span class="nav-part-pill" id="slidePartBadge">OVERVIEW</span>
+      <span class="nav-pill" id="slideSectionBadge">표지</span>
+    </div>
+
+    <div class="nav-controls">
+      <button class="ctrl-btn" onclick="prevSlide()" title="이전 슬라이드 (← / PageUp)">◀</button>
+      <span class="slide-counter" id="slideCounter">01 / 27</span>
+      <button class="ctrl-btn primary" id="nextBtn" onclick="nextSlide()" title="다음 슬라이드 (→ / Space / PageDown)">다음 ▶</button>
+      <button class="ctrl-btn" onclick="replayCurrentAnimation()" title="현재 장표 애니메이션 다시 재생 (R)">↻ 재생</button>
+      <button class="ctrl-btn" onclick="toggleFullScreen()" title="전체화면 (F)">전체화면</button>
+    </div>
+  </header>
+
+  <main class="stage-wrapper">
+    <div class="slide-canvas">
+
+      <!-- =========================================================
+           SLIDE 01: 표지 (Official Event Cover — Template Slide 1 + Speaker)
+           ========================================================= -->
+      <section class="slide active cid-cover-slide" data-part="intro" data-section="표지">
+        <div class="cid-cover-split">
+          <div class="cid-cover-left">
+            <div class="cid-cover-logo-row">
+              <img src="assets/gc_cloud_icon.png" alt="Google Cloud" class="cid-cover-cloud-icon" />
+            </div>
+
+            <div class="cid-cover-hero-text">
+              <h1 class="cid-cover-title">
+                Google Cloud<br />
+                Innovation Day<br />
+                for LG Group
+              </h1>
+            </div>
+
+            <div class="cid-cover-meta-row clean-tpl" style="flex-direction: column; align-items: flex-start; gap: 18px;">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <strong style="font-size: 22px; font-weight: 600; color: #202124; letter-spacing: -0.01em;">Rockyoon Go (고락윤)</strong>
+                <span style="font-size: 15.5px; font-weight: 500; color: #5F6368;">Customer Engineer, AI · Google Cloud</span>
+              </div>
+              <div class="cid-meta-items">
+                <div class="cid-meta-line">
+                  <img src="assets/icon_calendar.png" alt="" class="cid-meta-icon" />
+                  <span>November 11, 2026</span>
+                </div>
+                <div class="cid-meta-line">
+                  <img src="assets/icon_pin.png" alt="" class="cid-meta-icon" />
+                  <span>LG사이언스파크 E9 프론티어홀</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cid-cover-art-wrap">
+            <img src="assets/hero_cover_3d.png" alt="" class="cid-cover-art-img" />
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 02: PART 1 섹션 표지 (Template Slide 4)
+           ========================================================= -->
+      <section class="slide section-divider model-divider cid-sec-slide" data-part="model" data-section="01 · Gemini 4.0 Carbon">
+        <div class="cid-sec-split">
+          <div class="cid-sec-left">
+            <div class="cid-sec-num">01</div>
+            <h1 class="cid-sec-title" style="font-size: 68px;">Gemini 4.0<br />Carbon</h1>
+            <p class="cid-sec-sub">
+              15개 부문 1위  ·  100만 Output 토큰  ·  실전 보안 · 무결성
+            </p>
+          </div>
+          <div class="cid-sec-art-wrap">
+            <img src="assets/sec01_pill.png" alt="" class="cid-sec-pill-img" />
+            <img src="assets/sec01_3d.png" alt="" class="cid-sec-3d-img" />
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 03: 공식 벤치마크 성적표 (Google Blog Official 17-Benchmark Table)
+           ========================================================= -->
+      <section class="slide mm-slide gblog-bench-slide" data-part="model" data-section="공식 벤치마크 성적표" id="slideBenchOverview">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">공식 벤치마크 성적표  ·  <span class="cb-bench">Introducing Gemini 4 Carbon</span></span>
+            <h1 class="mm-title">17개 공식 평가 중 15개 부문에서 1위를 기록했습니다</h1>
+          </div>
+          <div class="mm-actions">
+            <span class="mm-auto-live-pill">Gemini 4 Carbon  ·  15 / 17 부문 1위</span>
+          </div>
+        </div>
+
+        <div class="gblog-table-card">
+          <table class="gblog-table" aria-label="Gemini 4 Carbon Official Benchmarks">
+            <colgroup>
+              <col class="col-cat" />
+              <col class="col-bench" />
+              <col class="col-carbon" />
+              <col class="col-argon" />
+              <col class="col-rival" />
+              <col class="col-rival" />
+              <col class="col-rival" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="th-cat"></th>
+                <th class="th-bench">Benchmark</th>
+                <th class="th-model g-col g-carbon">Gemini 4<br />Carbon</th>
+                <th class="th-model g-col g-argon">Gemini 4<br />Argon</th>
+                <th class="th-model">GPT-6<br />Astra</th>
+                <th class="th-model">Claude<br />Opus 5.5</th>
+                <th class="th-model">Claude<br />Fable 5.1</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- General capabilities -->
+              <tr class="cat-start">
+                <td class="td-cat" rowspan="2">General capabilities<span>종합 기본기</span></td>
+                <td class="td-bench"><b>AA Index v5.0</b></td>
+                <td class="td-val g-col g-carbon win">59</td>
+                <td class="td-val g-col g-argon">50</td>
+                <td class="td-val">57</td>
+                <td class="td-val">58</td>
+                <td class="td-val">49</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>Vals Index v2.2</b></td>
+                <td class="td-val g-col g-carbon win">70.4%</td>
+                <td class="td-val g-col g-argon">69.2%</td>
+                <td class="td-val">65.0%</td>
+                <td class="td-val">70.2%</td>
+                <td class="td-val">—</td>
+              </tr>
+
+              <!-- Agentic coding -->
+              <tr class="cat-start">
+                <td class="td-cat" rowspan="3">Agentic coding<span>자율 코딩 · 서버</span></td>
+                <td class="td-bench"><b>SWE-sweep</b></td>
+                <td class="td-val g-col g-carbon win">9.6%</td>
+                <td class="td-val g-col g-argon">4.3%</td>
+                <td class="td-val">9.5%</td>
+                <td class="td-val">3.6%</td>
+                <td class="td-val">2.9%</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>FrontierSWE 2</b></td>
+                <td class="td-val g-col g-carbon">61.2%</td>
+                <td class="td-val g-col g-argon">55.0%</td>
+                <td class="td-val top-other">65.5%</td>
+                <td class="td-val">62.3%</td>
+                <td class="td-val">56.3%</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>Terminal-Bench 4.0 (AA)</b></td>
+                <td class="td-val g-col g-carbon win">65.2%</td>
+                <td class="td-val g-col g-argon">57.1%</td>
+                <td class="td-val">59.1%</td>
+                <td class="td-val">59.6%</td>
+                <td class="td-val">52.0%</td>
+              </tr>
+
+              <!-- Computer use -->
+              <tr class="cat-start">
+                <td class="td-cat" rowspan="2">Computer use<span>PC 화면 조작</span></td>
+                <td class="td-bench"><b>Agents' Last Exam v1.1</b><em>Score</em></td>
+                <td class="td-val g-col g-carbon win">77.4%</td>
+                <td class="td-val g-col g-argon">69.0%</td>
+                <td class="td-val">73.1%</td>
+                <td class="td-val">71.6%</td>
+                <td class="td-val">—</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>OSWorld-2.1</b><em>Offline subset</em></td>
+                <td class="td-val g-col g-carbon">81.5%</td>
+                <td class="td-val g-col g-argon">74.7%</td>
+                <td class="td-val">80.9%</td>
+                <td class="td-val top-other">87.2%</td>
+                <td class="td-val">76.8%</td>
+              </tr>
+
+              <!-- Knowledge work -->
+              <tr class="cat-start">
+                <td class="td-cat" rowspan="2">Knowledge work<span>지식 · 장기 운영</span></td>
+                <td class="td-bench"><b>AutomationBench</b><em>Zapier</em></td>
+                <td class="td-val g-col g-carbon win">53.9%</td>
+                <td class="td-val g-col g-argon">51.3%</td>
+                <td class="td-val">41.4%</td>
+                <td class="td-val">42.5%</td>
+                <td class="td-val">31.4%</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>Vending-Bench 2</b><em>Bank balance ($)</em></td>
+                <td class="td-val g-col g-carbon win">$16,484</td>
+                <td class="td-val g-col g-argon">$13,718</td>
+                <td class="td-val">$15,515</td>
+                <td class="td-val">$9,235</td>
+                <td class="td-val">$5,422</td>
+              </tr>
+
+              <!-- Multimodal understanding -->
+              <tr class="cat-start">
+                <td class="td-cat" rowspan="2">Multimodal understanding<span>차트 · 설계 도면</span></td>
+                <td class="td-bench"><b>Chartography</b></td>
+                <td class="td-val g-col g-carbon win">72.5%</td>
+                <td class="td-val g-col g-argon">71.6%</td>
+                <td class="td-val">71.0%</td>
+                <td class="td-val">66.3%</td>
+                <td class="td-val">46.2%</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>Blueprint-Bench 2</b><em>Similarity score</em></td>
+                <td class="td-val g-col g-carbon win">58.6%</td>
+                <td class="td-val g-col g-argon">54.4%</td>
+                <td class="td-val">49.7%</td>
+                <td class="td-val">51.2%</td>
+                <td class="td-val">41.9%</td>
+              </tr>
+
+              <!-- Long context -->
+              <tr class="cat-start">
+                <td class="td-cat">Long context<span>초장문 추론</span></td>
+                <td class="td-bench"><b>GraphWalks</b><em>256k to 1M, BFS (F1)</em></td>
+                <td class="td-val g-col g-carbon win">96.2%</td>
+                <td class="td-val g-col g-argon">84.2%</td>
+                <td class="td-val">71.8%</td>
+                <td class="td-val">66.8%</td>
+                <td class="td-val">65.0%</td>
+              </tr>
+
+              <!-- Science and math -->
+              <tr class="cat-start">
+                <td class="td-cat" rowspan="2">Science and math<span>수리 증명 · 과학</span></td>
+                <td class="td-bench"><b>RiemannBench</b></td>
+                <td class="td-val g-col g-carbon win">80.0%</td>
+                <td class="td-val g-col g-argon">76.0%</td>
+                <td class="td-val">72.0%</td>
+                <td class="td-val">69.6%</td>
+                <td class="td-val">65.6%</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>Terminal-Bench-Science 0.1 (AA)</b></td>
+                <td class="td-val g-col g-carbon win">64.8%</td>
+                <td class="td-val g-col g-argon">52.9%</td>
+                <td class="td-val">63.3%</td>
+                <td class="td-val">59.0%</td>
+                <td class="td-val">43.3%</td>
+              </tr>
+
+              <!-- Cybersecurity -->
+              <tr class="cat-start">
+                <td class="td-cat" rowspan="3">Cybersecurity<span>사이버 보안</span></td>
+                <td class="td-bench"><b>CWE-bench</b></td>
+                <td class="td-val g-col g-carbon win">71.0%</td>
+                <td class="td-val g-col g-argon">68.0%</td>
+                <td class="td-val">68.0%</td>
+                <td class="td-val">67.0%</td>
+                <td class="td-val">58.0%</td>
+              </tr>
+              <tr>
+                <td class="td-bench"><b>ExploitGym</b></td>
+                <td class="td-val g-col g-carbon win">54.8%</td>
+                <td class="td-val g-col g-argon">42.0%</td>
+                <td class="td-val">42.4%</td>
+                <td class="td-val">34.5%</td>
+                <td class="td-val">—</td>
+              </tr>
+              <tr class="last-row">
+                <td class="td-bench"><b>SEC-bench Pro</b></td>
+                <td class="td-val g-col g-carbon win">88.2%</td>
+                <td class="td-val g-col g-argon">83.4%</td>
+                <td class="td-val">85.4%</td>
+                <td class="td-val">—</td>
+                <td class="td-val">—</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="gblog-table-foot">
+            <span>Methodology: deepmind.google/models/evals-methodology/gemini-4-carbon</span>
+            <span>Source: blog.google · Introducing Gemini 4 Carbon</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 04: 01 전과목 종합 (AA Index v5.0)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="01 전과목 종합 (AA Index v5.0)" data-bench-id="0">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">01 / 15  ·  전과목 종합  ·  <span class="cb-bench">AA Index v5.0</span></span>
+            <h1 class="mm-title">지식실무 · 코딩 · 과학 · 추론 9개 시험을 고르게 다 잘합니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>31점</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>50점</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>59점 · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>독립 평가기관(Artificial Analysis)이 <b>지식실무 · 코딩 · 과학 · 종합추론 4대 영역 9개 공식 시험</b>을 동시에 치르게 해 편차 없는 기본기를 채점하는 종합 평가</p></div>
+        <div class="sx-stage"><canvas data-show="aa"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 05: 02 재무·법무·세무·코딩 8종 (Vals Index v2.2)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="02 재무·법무·세무·코딩 8종 (Vals Index v2.2)" data-bench-id="1">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">02 / 15  ·  재무 · 법무 · 세무 · 코딩 8종 종합  ·  <span class="cb-bench">Vals Index v2.2</span></span>
+            <h1 class="mm-title">재무 · 법무 · 세무 · 코딩 8개 실무 벤치마크를 종합 검증합니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>56.0%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>69.2%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>70.4% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>회계·법무·세무·실무 코딩 <b>8개 벤치마크 종합 평가</b> — (화면 예시) 공시 보고서 숫자 대조 · 별첨 독소조항 · 세액 검토</p></div>
+        <div class="sx-stage"><canvas data-show="vals"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 06: 03 대규모 코딩 (SWE-sweep)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="03 대규모 코딩 (SWE-sweep)" data-bench-id="2">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">03 / 15  ·  대규모 코딩  ·  <span class="cb-bench">SWE-sweep</span></span>
+            <h1 class="mm-title">수천 개 파일 중 어디가 문제인지 스스로 찾아 한꺼번에 고칩니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>4.3%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>9.6% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>어느 파일이 원인인지 알려주지 않고 <b>2,400개 파일짜리 프로그램을 통째로 맡겨</b> 얽혀 있는 버그를 부작용 없이 수리하는 시험</p></div>
+        <div class="sx-stage"><canvas data-show="swe"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 07: 04 서버 복구 (Terminal-Bench 4.0)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="04 서버 복구 (Terminal-Bench 4.0)" data-bench-id="3">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">04 / 15  ·  서버 장애 복구  ·  <span class="cb-bench">Terminal-Bench 4.0</span></span>
+            <h1 class="mm-title">리눅스 터미널에 직접 명령어를 쳐서 멈춘 서버를 살려냅니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>19.7%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>57.1%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>65.2% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>새벽에 쇼핑몰 서버가 멈춘 상황 — 사람이 시키는 대로가 아니라 <b>혼자 에러 로그를 읽고 설정을 고쳐 재가동</b>까지 마치는 시험</p></div>
+        <div class="sx-stage"><canvas data-show="term"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 08: 05 55개 직무 PC·CLI (Agents' Last Exam v1.1)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="05 55개 직무 PC·CLI (Agents' Last Exam v1.1)" data-bench-id="4">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">05 / 15  ·  55개 직무 PC 화면 · 터미널 실무  ·  <span class="cb-bench">Agents' Last Exam v1.1</span></span>
+            <h1 class="mm-title">55개 직무의 PC 화면 조작과 터미널 실무를 함께 완수합니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>69.0%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>77.4% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>55개 전문 직무 환경에서 <b>PC 화면(GUI) 조작과 터미널·코드 실행을 결합</b>해 완수하는 평가 — (화면 예시) 포털·팝업·시트 처리</p></div>
+        <div class="sx-stage"><canvas data-show="desktop"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 09: 06 업무 앱 자동화 (AutomationBench)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="06 업무 앱 자동화 (AutomationBench)" data-bench-id="5">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">06 / 15  ·  다중 업무 앱 자동화  ·  <span class="cb-bench">AutomationBench (Zapier)</span></span>
+            <h1 class="mm-title">메일 · CRM · 시트 · 청구 · 메신저 6개 앱 업무를 사람 없이 완주합니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>51.3%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>53.9% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>고객 주문 변경 메일이 도착한 상황 — <b>CRM 등급 조회 → 시트 재고 차감 → 분할 발주 분기 → 청구서 · 슬랙 공유</b>까지 무인 완주하는 시험</p></div>
+        <div class="sx-stage"><canvas data-show="auto"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 10: 07 매장 운영 (Vending-Bench 2)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="07 매장 운영 (Vending-Bench 2)" data-bench-id="6">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">07 / 15  ·  장기 매장 운영  ·  <span class="cb-bench">Vending-Bench 2</span></span>
+            <h1 class="mm-title">1년 동안 매일 재고 · 발주 · 가격을 조절해 수익을 불립니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>$5,094</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>$13,718</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>$16,484 · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>초기 자금 $500로 무인 매장을 <b>365일 동안 매일 운영</b>하며 계절 수요 예측·공급처 변경·할인으로 <b>$16,484</b>를 달성하는 장기 경영 시험</p></div>
+        <div class="sx-stage"><canvas data-show="vending"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 11: 08 복합 차트 (Chartography)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="08 복합 차트 (Chartography)" data-bench-id="7">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">08 / 15  ·  이중축 차트 판독  ·  <span class="cb-bench">Chartography</span></span>
+            <h1 class="mm-title">좌 · 우 눈금이 다른 복잡한 공정 그래프를 착시 없이 읽습니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>40.9%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>71.6%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>72.5% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>왼쪽은 온도(°C), 오른쪽은 수율(%)인 이중 보조축 차트에서 <b>선이 겹치는 착시에 속지 않고 최고 온도 시점의 수율</b>을 정확히 읽는 시험</p></div>
+        <div class="sx-stage"><canvas data-show="chart"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 12: 09 실내 사진 설계도 복원 (Blueprint-Bench 2)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="09 실내 사진 설계도 복원 (Blueprint-Bench 2)" data-bench-id="8">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">09 / 15  ·  실내 사진 → 공간 설계도 복원  ·  <span class="cb-bench">Blueprint-Bench 2</span></span>
+            <h1 class="mm-title">현장 실내 사진 20장만 보고 정확한 설계도를 그려냅니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>38.6%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>54.4%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>58.6% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>방 안 여러 각도에서 찍은 <b>현장 실내 사진 약 20장</b>만 주고, 방 배치 · 문 연결 위치 · 면적 비율이 맞는 <b>정확한 설계도를 복원해 3D 공간까지 확장</b>하는 시험</p></div>
+        <div class="sx-stage"><canvas data-show="plan"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 13: 10 초장문 그래프 탐색 (GraphWalks (256k~1M))
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="10 초장문 그래프 탐색 (GraphWalks (256k~1M))" data-bench-id="9">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">10 / 15  ·  초장문 다중 홉 경로 탐색 (BFS)  ·  <span class="cb-bench">GraphWalks (256k~1M)</span></span>
+            <h1 class="mm-title">최대 100만 토큰 그래프의 다단계 연결을 도구 없이 추적합니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>84.2%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>96.2% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>256k~1M 토큰 대규모 그래프에서 <b>외부 도구 없이 다중 홉 경로(BFS)를 추적</b>하는 평가 — (현업 비유) 1,000쪽 4단계 단서 연결</p></div>
+        <div class="sx-stage"><canvas data-show="graph"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 14: 11 연구급 수리 추론 (RiemannBench)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="11 연구급 수리 추론 (RiemannBench)" data-bench-id="10">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">11 / 15  ·  연구급 순수 수리 추론  ·  <span class="cb-bench">RiemannBench</span></span>
+            <h1 class="mm-title">대학원 · 연구 수준의 고난도 수학 난제를 도구 없이 풀어냅니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>76.0%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>80.0% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>수학 교수·IMO 메달리스트가 출제한 <b>연구급 순수 수학 난제의 닫힌 해를 도구 없이 도출</b>하는 평가 — (현업 비유) 제어 미분방정식 증명</p></div>
+        <div class="sx-stage"><canvas data-show="math"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 15: 12 실험 보정 (Terminal-Bench-Science 0.1)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="12 실험 보정 (Terminal-Bench-Science 0.1)" data-bench-id="11">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">12 / 15  ·  실험 데이터 보정  ·  <span class="cb-bench">Terminal-Bench-Science 0.1</span></span>
+            <h1 class="mm-title">시뮬레이션 코드를 반복 실행하며 실제 실험 측정값에 맞춥니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>10.0%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>52.9%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>64.8% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>연구소 실측 센서값과 시뮬레이션 곡선이 어긋난 상황 — <b>물리 계수를 직접 고치고 다시 돌려 오차 0.3% 이내로 맞추는</b> R&D 시험</p></div>
+        <div class="sx-stage"><canvas data-show="fit"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 16: 13 보안 탐지 (SEC-bench Pro)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="13 보안 탐지 (SEC-bench Pro)" data-bench-id="12">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">13 / 15  ·  숨은 보안 구멍 탐지  ·  <span class="cb-bench">SEC-bench Pro</span></span>
+            <h1 class="mm-title">파일 여러 개를 건너가는 함수 호출 길을 따라가 보안 구멍을 찾습니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>83.4%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>88.2% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>출시 전 보안 감사 상황 — 한 파일만 봐서는 정상처럼 보이지만 <b>3개 파일 호출 흐름을 이어야 드러나는 권한 우회 통로</b>를 찾는 시험</p></div>
+        <div class="sx-stage"><canvas data-show="sec"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 17: 14 모의 해킹 실증 (ExploitGym)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="14 모의 해킹 실증 (ExploitGym)" data-bench-id="13">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">14 / 15  ·  격리 샌드박스 모의 해킹 실증  ·  <span class="cb-bench">ExploitGym</span></span>
+            <h1 class="mm-title">보안 약점이 실제로 뚫리는지 격리 환경에서 공격 코드를 짜서 입증합니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>42.0%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>54.8% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>외부망이 차단된 안전한 격리 컨테이너 안에서 <b>실제 작동하는 모의 해킹 코드(PoC)를 직접 작성 · 실행해</b> 침투 가능 여부를 입증하는 방어 검증 시험</p></div>
+        <div class="sx-stage"><canvas data-show="exploit"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 18: 15 보안 패치 (CWE-bench)
+           ========================================================= -->
+      <section class="slide mm-slide mm-bench-single-slide bx-slide" data-part="model" data-section="15 보안 패치 (CWE-bench)" data-bench-id="14">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">15 / 15  ·  기능 보존 보안 패치  ·  <span class="cb-bench">CWE-bench</span></span>
+            <h1 class="mm-title">정상 기능은 그대로 두고 보안 구멍만 정확히 막는 패치를 작성합니다</h1>
+          </div>
+          <div class="mm-actions">
+            <div class="mm-lineup-mini">
+              <span class="mm-lm-item">3.8 Flash <b>—</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item">4 Argon <b>68.0%</b></span>
+              <span class="mm-lm-arr">→</span>
+              <span class="mm-lm-item win">4 Carbon <b>71.0% · 1위</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="bx-situ"><span>어떤 상황?</span><p>취약한 코드에 보안 패치를 작성해 <b>보안 테스트(공격 차단)와 기존 기능 테스트(정상 동작)를 모두 통과</b>해야 하는 시험 — (화면 예시) 결제·검색 모듈 SQL 인젝션 패치</p></div>
+        <div class="sx-stage"><canvas data-show="cwe"></canvas></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 19: 실험 1 · 물류 로봇 50대 (군집 경로 제어 실시간 3D 시연)
+           ========================================================= -->
+      <section class="slide mm-slide mm-sim-slide" data-part="model" data-section="실험 1 · 로봇 50대" data-autosim-target="agvLiveMount" data-autosim-src="sims/13_agv_warehouse_50.html">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">실시간 검증  ·  실험 1  ·  군집 경로 제어</span>
+            <h1 class="mm-title">장애물을 즉시 피해가는 로봇 50대</h1>
+          </div>
+          <div class="mm-actions">
+            <span class="mm-auto-live-pill">● 자동 시연 중  ·  장애물 낙하 · A* 우회</span>
+          </div>
+        </div>
+
+        <div class="sim-full-stage" id="agvLiveMount"></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 20: 실험 2 · 블랙홀 중력 렌즈 (물리 미분방정식 실시간 3D 시연)
+           ========================================================= -->
+      <section class="slide mm-slide mm-sim-slide" data-part="model" data-section="실험 2 · 블랙홀" data-autosim-target="bhLiveMount" data-autosim-src="sims/09_blackhole_tde.html">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">실시간 검증  ·  실험 2  ·  물리 연산</span>
+            <h1 class="mm-title">수식만으로 그리는 블랙홀 중력 렌즈</h1>
+          </div>
+          <div class="mm-actions">
+            <span class="mm-auto-live-pill">● 자동 시연 중  ·  실시간 물리 연산</span>
+          </div>
+        </div>
+
+        <div class="sim-full-stage" id="bhLiveMount"></div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 21: Output Token 스케일 (Input 읽기 vs Output 직접 쓰기 비교)
+           ========================================================= -->
+      <section class="slide mm-slide out-tok-slide" data-part="model" data-section="100만 Output Token" id="slideTokenCompare">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">Output Token 스케일 <span class="cb-bench">(Long Decode 연속 생성 한도)</span></span>
+            <h1 class="mm-title">읽는 양(Input)이 아닌, <span class="out-tok-hi">직접 써 내려가는 Output이 100만 토큰</span>입니다</h1>
+          </div>
+          <div class="mm-actions">
+            <span class="mm-auto-live-pill">Output 6.4만 → 100만  ·  약 16배</span>
+          </div>
+        </div>
+
+        <!-- Layer 1: Input (Reading) vs Output Token (Writing) Visual Flow -->
+        <div class="out-io-flow">
+          <div class="out-io-node input-node">
+            <span class="out-io-pill slate">Input · 읽기</span>
+            <div class="out-io-copy">
+              <span>사람이 넣는 질문 · 참고 문서</span>
+              <strong>"16개 모듈 전체 코드 짜줘"</strong>
+            </div>
+          </div>
+          <div class="out-io-arrow">──▶</div>
+          <div class="out-io-node engine-node">
+            <strong>AI 추론 · 집필</strong>
+            <span>(연속 디코딩 수행)</span>
+          </div>
+          <div class="out-io-arrow blue">──▶</div>
+          <div class="out-io-node output-node">
+            <span class="out-io-pill navy">Output · 쓰기 ★</span>
+            <div class="out-io-copy">
+              <strong class="navy-txt">AI가 멈추지 않고 직접 써 내려가는 결과물 분량</strong>
+              <span>완성 코드 · 장문 보고서 · 에이전트 연속 실행 단계</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layer 2: Side-by-Side Concrete Deliverable Comparison -->
+        <div class="out-compare-grid">
+          <!-- LEFT: Legacy 64K Output Limit -->
+          <div class="out-card legacy-card">
+            <div class="out-card-head">
+              <span class="out-card-title">기존 세대 Output 한계 (64K)</span>
+              <span class="out-status-pill red">[X 6.4만 토큰 중단]</span>
+            </div>
+
+            <div class="out-bar-track legacy">
+              <div class="out-bar-stub" id="mmStub64"></div>
+              <div class="out-cut-line"></div>
+              <span class="out-bar-stub-lbl" id="mmLabel64">약 6.4만 Output 한계 벽 (전체의 6.4% 지점에서 절단)</span>
+            </div>
+
+            <div class="out-mod-section">
+              <div class="out-mod-caption">직접 작성한 결과물 모듈 <em class="red-em">(16개 중 2번째 모듈에서 출력 끊김)</em></div>
+              <div class="out-mod-grid" id="outModGrid64">
+                <div class="out-mod-cell done"><span>01</span><b>설계</b></div>
+                <div class="out-mod-cell cut"><span>02</span><b>절단✕</b></div>
+                <div class="out-mod-cell empty"><span>03</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>04</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>05</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>06</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>07</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>08</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>09</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>10</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>11</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>12</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>13</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>14</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>15</span><b>미완성</b></div>
+                <div class="out-mod-cell empty"><span>16</span><b>미완성</b></div>
+              </div>
+            </div>
+
+            <div class="out-log-box">
+              <div>생성 산출물: <b>01_arch.md</b> 완료 → <b>02_db.sql</b> 작성 도중 정지</div>
+              <div class="err-line">✕ "// ...출력 한도(64K) 도달로 이하 14개 모듈 생략 (이하 생략)"</div>
+              <div>→ <b>사람이 15번 "이어서 써줘" 재지시</b> · 잘린 코드 직접 이어 붙여야 함</div>
+            </div>
+
+            <div class="out-verdict red">중간 요약 · 생략으로 끊겨 무인 자동화 · 원샷 개발 불가</div>
+          </div>
+
+          <!-- RIGHT: Gemini 4.0 Carbon 1M Output -->
+          <div class="out-card carbon-card">
+            <div class="out-card-head">
+              <div class="out-card-brand">
+                <img src="assets/mark_gemini.png" alt="" class="mm-inline-mark" />
+                <span class="out-card-title navy">Gemini 4.0 Carbon</span>
+              </div>
+              <span class="out-status-pill green">[O 100만 토큰 완주]</span>
+            </div>
+
+            <div class="out-bar-track carbon">
+              <div class="out-bar-full" id="mmFill1M">최대 100만 Output Token 연속 생성 (Long Decode · 64K 대비 약 16배)</div>
+              <div class="out-pass-line"></div>
+            </div>
+
+            <div class="out-mod-section">
+              <div class="out-mod-caption navy-cap">직접 작성한 결과물 모듈 <em class="navy-em" id="outModCount1M">(16 / 16개 전 모듈 끊김 없이 100% 완성)</em></div>
+              <div class="out-mod-grid" id="outModGrid1M">
+                <div class="out-mod-cell blue"><span>01</span><b>설계</b></div>
+                <div class="out-mod-cell blue"><span>02</span><b>DB</b></div>
+                <div class="out-mod-cell blue"><span>03</span><b>인증</b></div>
+                <div class="out-mod-cell blue"><span>04</span><b>API</b></div>
+                <div class="out-mod-cell blue"><span>05</span><b>결제</b></div>
+                <div class="out-mod-cell blue"><span>06</span><b>재고</b></div>
+                <div class="out-mod-cell blue"><span>07</span><b>물류</b></div>
+                <div class="out-mod-cell blue"><span>08</span><b>정산</b></div>
+                <div class="out-mod-cell blue"><span>09</span><b>알림</b></div>
+                <div class="out-mod-cell blue"><span>10</span><b>권한</b></div>
+                <div class="out-mod-cell blue"><span>11</span><b>화면</b></div>
+                <div class="out-mod-cell blue"><span>12</span><b>차트</b></div>
+                <div class="out-mod-cell blue"><span>13</span><b>검증</b></div>
+                <div class="out-mod-cell blue"><span>14</span><b>통합</b></div>
+                <div class="out-mod-cell blue"><span>15</span><b>보안</b></div>
+                <div class="out-mod-cell blue"><span>16</span><b>배포</b></div>
+              </div>
+            </div>
+
+            <div class="out-equiv-trio">
+              <div class="out-equiv-item">
+                <strong>코드 약 7만 줄</strong>
+                <span>전체 시스템 · 테스트<br />원샷 완성 분량</span>
+              </div>
+              <div class="out-equiv-item">
+                <strong>A4 약 2,000쪽</strong>
+                <span>단행본 7~8권 분량<br />보고서 연속 집필</span>
+              </div>
+              <div class="out-equiv-item highlight">
+                <strong>무중단 에이전트</strong>
+                <span>수백 단계 도구 실행<br />밤새 끊김 없이 완주</span>
+              </div>
+            </div>
+
+            <div class="out-verdict green">한 번 지시로 마지막 줄까지 완성본 제출 — 즉시 실행 · 배포 가능</div>
+          </div>
+        </div>
+
+        <!-- Layer 3: Bottom Takeaway Strip -->
+        <div class="out-takeaway-strip">
+          <span class="out-takeaway-pill">실무 핵심 차이</span>
+          <p>짧은 질의응답에선 안 보여도, <b>대규모 코딩 · 장문 보고서 · 밤새 일하는 에이전트</b>에선 <strong class="navy-txt">100만 Output이 완주를 결정합니다.</strong></p>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 22: 실전 검증 · 안전성 (Chrome 10x 패치 · 환각 -50% · 무결성 0.0%)
+           ========================================================= -->
+      <section class="slide mm-slide out-tok-slide" data-part="model" data-section="실전 검증 · 안전성" id="slideCarbonTrust">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">실전 검증 · 안전성  ·  <span class="cb-bench">Introducing Gemini 4 Carbon 공식 리포트</span></span>
+            <h1 class="mm-title">똑똑할 뿐 아니라, <span class="out-tok-hi">거짓 보고와 편법 우회를 크게 줄였습니다</span></h1>
+          </div>
+          <div class="mm-actions">
+            <span class="mm-auto-live-pill">Chrome 실전 검증  ·  치팅 성공 0.0%</span>
+          </div>
+        </div>
+
+        <div class="trust-compare-grid">
+          <!-- Left: Real-world Security & Long-Horizon Proof -->
+          <div class="trust-left-card">
+            <div class="out-card-head">
+              <div class="out-card-brand">
+                <img src="assets/mark_gemini.png" alt="" class="mm-inline-mark" />
+                <span class="out-card-title navy">실전 보안 · 장기 엔지니어링 검증</span>
+              </div>
+              <span class="trust-soft-pill">Google 내부 실증</span>
+            </div>
+
+            <div class="trust-bar-box">
+              <div class="trust-bar-head">
+                <strong>Chrome 보안팀 고품질 패치 생성률</strong>
+                <span class="trust-stat-val">10배 이상</span>
+              </div>
+              <div class="trust-ref-track">
+                <div class="trust-ref-stub"></div>
+                <span>타사 프론티어 모델 기준 (1x)</span>
+              </div>
+              <div class="trust-win-bar navy">Gemini 4 Carbon — 상용 코드 보안 패치 10x+ 성공</div>
+            </div>
+
+            <div class="trust-bar-box">
+              <div class="trust-bar-head">
+                <strong>안전한 코드(Secure Code) 생성률</strong>
+                <span class="trust-stat-val">2배 이상</span>
+              </div>
+              <div class="trust-argon-bar">Gemini 4 Argon (1x)</div>
+              <div class="trust-win-bar blue">Gemini 4 Carbon — 보안 약점 없는 코드 작성 2x+</div>
+            </div>
+
+            <div class="trust-multiday-box">
+              <strong>Multi-day 장기 자율 디버깅  ·  WebDev +89 Elo</strong>
+              <p>대규모 코드베이스에서 <b>며칠간 막히는 원인을 스스로 추적·수리 완주</b> 및 풀스택 웹 개발 리더보드(WebDev Arena) <b>+89점 상승(1,768점)</b></p>
+            </div>
+          </div>
+
+          <!-- Right: 3 Enterprise Agent Integrity Metrics -->
+          <div class="trust-right-stack">
+            <div class="trust-metric-card">
+              <div class="trust-metric-badge blue">
+                <strong>-50%</strong>
+                <span>환각 절반 감소</span>
+              </div>
+              <div class="trust-metric-copy">
+                <span class="trust-tag slate">근거 없는 주장 억제</span>
+                <h3>추측성 답변을 절반으로 줄임</h3>
+                <p>Argon 대비 근거 없는 주장(환각) 약 50% 감소, 지시받은 프로젝트 경계를 넘지 않고 안전하게 실행</p>
+              </div>
+            </div>
+
+            <div class="trust-metric-card active-trust">
+              <div class="trust-metric-badge green">
+                <strong>0.0%</strong>
+                <span>편법 우회 제로</span>
+              </div>
+              <div class="trust-metric-copy">
+                <span class="trust-tag green">[O Terminal-Bench 4.0]</span>
+                <h3>테스트 속이기 · 치팅 성공 0.0%</h3>
+                <p>채점 스크립트 조작이나 우회 꼼수 없이 정석적인 엔지니어링 절차만으로 서버 장애 복구 완수</p>
+              </div>
+            </div>
+
+            <div class="trust-metric-card">
+              <div class="trust-metric-badge green">
+                <strong>0.0%</strong>
+                <span>인젝션 방어</span>
+              </div>
+              <div class="trust-metric-copy">
+                <span class="trust-tag green">[O Gray Swan 보안 평가]</span>
+                <h3>간접 프롬프트 인젝션 뚫림 0.0%</h3>
+                <p>외부 웹·문서에 숨겨진 악성 명령어(Indirect Prompt Injection) 공격 성공률 0.0% (Gray Swan 평가 기준)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="out-takeaway-strip">
+          <span class="out-takeaway-pill">기업 도입 안심 기준</span>
+          <p>성능 1위뿐 아니라 <b>근거 없는 주장(-50%) · 편법 우회(0.0%) · 외부 인젝션(0.0%)</b>까지 공식 평가로 확인해 <strong class="navy-txt">자율 에이전트 도입의 신뢰 근거를 높였습니다.</strong></p>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 23: PART 2 섹션 표지 (Template Slide 5)
+           ========================================================= -->
+      <section class="slide section-divider arch-divider cid-sec-slide" data-part="arch" data-section="02 · 3대 AI 통합">
+        <div class="cid-sec-split">
+          <div class="cid-sec-left">
+            <div class="cid-sec-num">02</div>
+            <h1 class="cid-sec-title" style="font-size: 64px;">3대 AI를<br />한곳에서</h1>
+            <p class="cid-sec-sub">
+              단일 플랫폼 거버넌스  ·  개발자 모델 선택 자율성
+            </p>
+          </div>
+          <div class="cid-sec-art-wrap sec02-art">
+            <img src="assets/sec02_pill.png" alt="" class="cid-sec-pill-img sec02-pill" />
+            <img src="assets/sec02_3d.png" alt="" class="cid-sec-3d-img sec02-3d" />
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 24: Google Cloud model garden (Real Brand Logos + 3 Robots + Zero Dead Space)
+           ========================================================= -->
+      <section class="slide mm-slide" data-part="arch" data-section="model garden · 3대 AI">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">Google Cloud model garden  ·  10월 21일 OpenAI 합류</span>
+            <h1 class="mm-title">Gemini · Claude · OpenAI, 원하는 두뇌를 골라 씁니다</h1>
+          </div>
+        </div>
+
+        <div class="mm-garden-stage">
+          <div class="mm-garden-cards">
+            <div class="mm-gcard gemini">
+              <div class="mm-gcard-logo-box">
+                <img src="assets/logo_gemini.png" alt="Gemini" class="mm-gcard-logo gemini-logo" />
+              </div>
+              <div class="mm-gcard-div"></div>
+              <div class="mm-gcard-sub1">Google  ·  Gemini 4.0</div>
+              <div class="mm-gcard-sub2">최대 100만 토큰 · 깊은 추론과 멀티모달</div>
+              <div class="mm-gcard-chips">
+                <span>Carbon</span>
+                <span>Argon</span>
+                <span>3.8 Flash</span>
+              </div>
+            </div>
+
+            <div class="mm-gcard claude">
+              <div class="mm-gcard-logo-box">
+                <img src="assets/logo_anthropic.png" alt="Anthropic" class="mm-gcard-logo anthropic-logo" />
+              </div>
+              <div class="mm-gcard-div"></div>
+              <div class="mm-gcard-sub1">Anthropic  ·  Claude 5.5</div>
+              <div class="mm-gcard-sub2">PC 화면 조작 1위(OSWorld) · 특유의 감도와 직관성</div>
+              <div class="mm-gcard-chips">
+                <span>Opus 5.5</span>
+                <span>Fable 5.1</span>
+              </div>
+            </div>
+
+            <div class="mm-gcard openai">
+              <span class="mm-new-pill">NEW · 10.21</span>
+              <div class="mm-gcard-logo-box">
+                <img src="assets/logo_openai.png" alt="OpenAI" class="mm-gcard-logo openai-logo" />
+              </div>
+              <div class="mm-gcard-div"></div>
+              <div class="mm-gcard-sub1">OpenAI  ·  GPT-6 / 6.1</div>
+              <div class="mm-gcard-sub2">에이전트 코딩 1위(FrontierSWE 2) · 장기 운영</div>
+              <div class="mm-gcard-chips">
+                <span>GPT-6 Astra</span>
+                <span>6.1 Sol</span>
+                <span>6.1 Terra</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mm-garden-platform-band">
+            <div class="mm-garden-robots-wrap">
+              <img src="assets/three_robots_3d.png" alt="Gemini Claude OpenAI Mascots" class="mm-garden-robots-img" />
+            </div>
+
+            <div class="mm-garden-copy">
+              <div class="mm-gc-badge-row">
+                <img src="assets/gc_cloud_icon.png" alt="Google Cloud" class="mm-gc-mini-icon" />
+                <span>Google Cloud 단일 플랫폼 거버넌스</span>
+              </div>
+              <div class="main">하나의 플랫폼 거버넌스 안에서,<br />개발자가 Gemini · Claude · GPT를 자율적으로 골라 씁니다</div>
+              <div class="mm-garden-pillars">
+                <span>단일 IAM · VPC-SC 거버넌스</span>
+                <span>개발자 자율 선택 (Autonomy)</span>
+                <span>통합 청구 · 간편 활성화</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 25: 멀티 모델 오케스트레이션 · 업무별 실시간 동적 배합 (Auto-Cycling + Live Router Canvas)
+           ========================================================= -->
+      <section class="slide mm-slide" data-part="arch" data-section="멀티 모델 · 동적 배합" id="slideModelGarden">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">멀티 모델 오케스트레이션  ·  업무별 실시간 동적 라우팅</span>
+            <h1 class="mm-title">하나만 고집하지 말고, 업무마다 최적 비율로 섞어 쓰세요</h1>
+          </div>
+          <div class="mm-actions">
+            <span class="mm-auto-live-pill">● 자동 시연 중  ·  업무별 비율 실시간 전환</span>
+          </div>
+        </div>
+
+        <div class="mm-split-rows">
+          <div class="mm-left-visual">
+            <div class="mm-visual-card mm-dyn-mix-card">
+              <div class="mm-dyn-top-head">
+                <div class="mm-dyn-scenario-row">
+                  <span class="mm-vis-label">현재 유입 업무</span>
+                  <span class="mm-dyn-badge gemini" id="mgScenarioBadge">대용량 문서 · 로그 분석 (Gemini 주력)</span>
+                </div>
+                <div class="mm-dyn-cycle-track">
+                  <div class="mm-dyn-cycle-fill" id="mgCycleFill"></div>
+                </div>
+              </div>
+
+              <div class="mm-router-canvas-wrap">
+                <canvas id="mgRouterCanvas"></canvas>
+              </div>
+
+              <div class="mm-mix-bar">
+                <div class="mm-mix-seg g" id="mgBarGemini" style="width: 55%;">55%</div>
+                <div class="mm-mix-seg c" id="mgBarClaude" style="width: 25%;">25%</div>
+                <div class="mm-mix-seg o" id="mgBarOpenAI" style="width: 20%;">20%</div>
+              </div>
+
+              <div class="mm-mix-breakdown compact-dyn">
+                <div class="mm-mix-item">
+                  <div class="mm-mix-item-top">
+                    <span class="mm-cbar-brand"><img src="assets/mark_gemini.png" alt="" class="mm-inline-mark" /> Gemini 4.0 <em class="mm-lead-chip on" id="mgChipG">주력</em></span>
+                    <strong id="mgPctGemini" style="color:#174EA6;">55%</strong>
+                  </div>
+                  <div class="mm-mix-mini-track"><div class="mm-mix-mini-fill g" id="mgSubGemini" style="width: 55%;"></div></div>
+                </div>
+
+                <div class="mm-mix-item">
+                  <div class="mm-mix-item-top">
+                    <span class="mm-cbar-brand"><img src="assets/mark_anthropic.png" alt="" class="mm-inline-mark" /> Claude 5.5 <em class="mm-lead-chip coral" id="mgChipC">주력</em></span>
+                    <strong id="mgPctClaude" style="color:#C25938;">25%</strong>
+                  </div>
+                  <div class="mm-mix-mini-track"><div class="mm-mix-mini-fill c" id="mgSubClaude" style="width: 25%;"></div></div>
+                </div>
+
+                <div class="mm-mix-item">
+                  <div class="mm-mix-item-top">
+                    <span class="mm-cbar-brand"><img src="assets/mark_openai.png" alt="" class="mm-inline-mark" /> OpenAI GPT-6 / 6.1 <em class="mm-lead-chip green" id="mgChipO">주력</em></span>
+                    <strong id="mgPctOpenAI" style="color:#0D8A6A;">20%</strong>
+                  </div>
+                  <div class="mm-mix-mini-track"><div class="mm-mix-mini-fill o" id="mgSubOpenAI" style="width: 20%;"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mm-flat-stack">
+            <div class="mm-flat-row mm-dyn-brand-row lead-gemini" id="mgRowGemini">
+              <div class="mm-row-logo-cell">
+                <img src="assets/logo_gemini.png" alt="Gemini" class="mm-row-brand-logo gemini" />
+              </div>
+              <div class="mm-row-body">
+                <div class="mm-row-headline" id="mgHeadGemini">100만 토큰 대량 취합 · 초안 생성</div>
+              </div>
+              <div class="mm-row-live-pct g" id="mgBigG">55%</div>
+            </div>
+
+            <div class="mm-flat-row mm-dyn-brand-row" id="mgRowClaude">
+              <div class="mm-row-logo-cell">
+                <div class="mm-claude-lockup">
+                  <img src="assets/mark_anthropic.png" alt="" class="mm-claude-mark" />
+                  <span>Claude</span>
+                </div>
+              </div>
+              <div class="mm-row-body">
+                <div class="mm-row-headline" id="mgHeadClaude">핵심 요약본 문장 다듬기</div>
+              </div>
+              <div class="mm-row-live-pct c" id="mgBigC">25%</div>
+            </div>
+
+            <div class="mm-flat-row mm-dyn-brand-row" id="mgRowOpenAI">
+              <div class="mm-row-logo-cell">
+                <img src="assets/logo_openai.png" alt="OpenAI" class="mm-row-brand-logo openai" />
+              </div>
+              <div class="mm-row-body">
+                <div class="mm-row-headline" id="mgHeadOpenAI">리스크 항목 교차 점검</div>
+              </div>
+              <div class="mm-row-live-pct o" id="mgBigO">20%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 26: 단일 플랫폼 거버넌스 & 개발자 자율성 (Unified Governance x Developer Autonomy)
+           ========================================================= -->
+      <section class="slide mm-slide" data-part="arch" data-section="단일 거버넌스 · 개발자 자율성" id="slideAgentGovPlatform">
+        <div class="mm-head">
+          <div class="mm-head-left">
+            <span class="mm-kicker">단일 플랫폼 거버넌스  ·  Developer Autonomy</span>
+            <h1 class="mm-title">하나의 거버넌스로 통제하고, 개발자에겐 모델 자율성을 줍니다</h1>
+          </div>
+          <div class="mm-actions">
+            <span class="mm-auto-live-pill" id="govLivePill">● 자동 시연 중  ·  거버넌스 고정 · 모델 자율 전환</span>
+          </div>
+        </div>
+
+        <div class="mm-split-rows">
+          <div class="mm-left-visual">
+            <div class="mm-gov-box">
+              <div class="mm-gov-top-shield">
+                <div class="mm-gov-shield-head">
+                  <span class="mm-cbar-brand">
+                    <img src="assets/gc_cloud_icon.png" alt="" class="mm-inline-mark" />
+                    <strong>Google Cloud 단일 플랫폼 거버넌스</strong>
+                  </span>
+                  <span class="ok">전사 보안 표준 고정</span>
+                </div>
+                <div class="mm-gov-shield-chips">
+                  <span>✓ IAM · VPC-SC 망분리</span>
+                  <span>✓ Model Armor · 감사 로그</span>
+                  <span>✓ 통합 한도 · 부서 정산</span>
+                </div>
+              </div>
+
+              <div class="mm-gov-canvas-wrap">
+                <canvas id="govSwapCanvas"></canvas>
+              </div>
+
+              <div class="mm-gov-slots-row">
+                <div class="mm-gov-slot active-gemini" id="govRowGemini">
+                  <img src="assets/mark_gemini.png" alt="" class="mm-gov-slot-mark" />
+                  <div class="mm-gov-slot-name">Gemini 4.0</div>
+                  <span class="mm-gov-slot-tag" id="govBadgeGemini">● 자율 선택 가동</span>
+                </div>
+
+                <div class="mm-gov-slot" id="govRowClaude">
+                  <img src="assets/mark_anthropic.png" alt="" class="mm-gov-slot-mark" />
+                  <div class="mm-gov-slot-name">Claude 5.5</div>
+                  <span class="mm-gov-slot-tag" id="govBadgeClaude">PC 조작 · 감도·직관성</span>
+                </div>
+
+                <div class="mm-gov-slot" id="govRowOpenAI">
+                  <img src="assets/mark_openai.png" alt="" class="mm-gov-slot-mark" />
+                  <div class="mm-gov-slot-name">OpenAI GPT-6 / 6.1</div>
+                  <span class="mm-gov-slot-tag" id="govBadgeOpenAI">코딩 · 장기 운영</span>
+                </div>
+              </div>
+
+              <div class="mm-gov-compare-bar">
+                <span class="old">외부 개별 API 난립 해소</span>
+                <span class="arrow">→</span>
+                <strong class="new">단일 거버넌스 + 개발자 자율성(Autonomy) 동시 달성</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="mm-flat-stack">
+            <div class="mm-flat-row" id="govBen0">
+              <div class="mm-row-key">단일 거버넌스</div>
+              <div class="mm-row-body">
+                <div class="mm-row-headline">보안 · 권한 · 감사는 하나의 플랫폼에서 일관되게 통제</div>
+                <div class="mm-row-sub-concise">IAM · VPC-SC · Model Armor 구성으로 3대 모델 일관 통제</div>
+              </div>
+            </div>
+
+            <div class="mm-flat-row active-row" id="govBen1">
+              <div class="mm-row-key">개발자 자율성</div>
+              <div class="mm-row-body">
+                <div class="mm-row-headline">과제에 맞춰 Gemini · Claude · GPT를 자율 선택</div>
+                <div class="mm-row-sub-concise">초기 환경만 잘 구성해 두면 반복 절차 없이 손쉽게 모델 실험 · 전환</div>
+              </div>
+            </div>
+
+            <div class="mm-flat-row" id="govBen2">
+              <div class="mm-row-key">표준 가시성</div>
+              <div class="mm-row-body">
+                <div class="mm-row-headline">외부 API 사각지대 없이 사내 표준 안에서 빠른 개발</div>
+                <div class="mm-row-sub-concise">팀별 토큰 사용량 · 감사 로그 · 모델 전환 이력을 단일 콘솔에서 관리</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 27: 감사합니다 (Minimal One-Line Closing)
+           ========================================================= -->
+      <section class="slide cid-thankyou-slide" data-part="arch" data-section="감사합니다">
+        <div class="cid-ty-split">
+          <div class="cid-ty-left">
+            <img src="assets/gc_wordmark.png" alt="Google Cloud" class="cid-ty-wordmark" />
+            <div class="cid-ty-hero">
+              <h1 class="cid-ty-title">감사합니다</h1>
+              <p class="cid-ty-sub"><strong>Gemini 4.0</strong>부터 <strong>단일 거버넌스 · 3대 AI 자율 선택</strong>까지, Google Cloud가 함께합니다.</p>
+            </div>
+            <div class="cid-ty-spacer"></div>
+          </div>
+
+          <div class="cid-ty-art-wrap">
+            <img src="assets/thankyou_pill.png" alt="" class="cid-ty-pill-img" />
+            <img src="assets/thankyou_3d.png" alt="" class="cid-ty-3d-img" />
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="cid-running-footer" id="cidRunningFooter">
+      <span>Google Cloud</span>
+      <span>Innovation Day for LG Group · Proprietary &amp; Confidential</span>
+    </footer>
+  </main>
+
+  <aside class="notes-drawer" id="notesDrawer">
+    <div class="notes-header">
+      <span id="notesTitle">발표자 대본 (Slide 01)</span>
+      <button class="ctrl-btn" style="padding: 2px 8px; font-size: 11px;" onclick="toggleNotes()">닫기 ✕</button>
+    </div>
+    <div class="notes-body" id="notesBody"></div>
+  </aside>
+
+  <div class="overview-backdrop" id="overviewBackdrop" onclick="if(event.target===this) toggleOverview()">
+    <div class="overview-panel">
+      <div class="notes-header" style="padding: 14px 20px; font-size: 15px;">
+        <span>전체 슬라이드 목차 (27장)</span>
+        <button class="ctrl-btn" onclick="toggleOverview()">닫기 ✕</button>
+      </div>
+      <div class="overview-grid" id="overviewGrid"></div>
+    </div>
+  </div>
+
+  <div class="sim-modal-backdrop" id="simModalBackdrop" onclick="if(event.target===this) closeSimModal()">
+    <div class="sim-modal-window">
+      <div class="sim-stage-bar" style="height: 42px; padding: 0 18px;">
+        <span id="simModalTitle">실시간 3D 시뮬레이션</span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="sim-tab-btn" onclick="reloadModalSim()">↻ 새로고침</button>
+          <button class="sim-tab-btn active" onclick="closeSimModal()">닫기 ✕</button>
+        </div>
+      </div>
+      <div class="sim-modal-body" id="simModalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="showcase.js"></script>
+</body>
+</html>

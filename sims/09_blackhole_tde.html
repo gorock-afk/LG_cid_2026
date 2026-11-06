@@ -1,0 +1,3191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kerr–TDE Relativistic Black Hole &amp; Tidal Disruption Lab</title>
+  <meta name="description" content="Interactive 3D WebGL/Three.js Relativistic Kerr Black Hole Geodesic Raymarching, 3D Scene Lensing &amp; Planetary Tidal Disruption (Spaghettification) Physics Sandbox." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-obsidian: #020308;
+      --panel-bg: rgba(8, 12, 24, 0.78);
+      --panel-elevated: rgba(14, 21, 38, 0.90);
+      --panel-border: rgba(148, 163, 184, 0.20);
+      --panel-border-strong: rgba(56, 189, 248, 0.42);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-cyan: #38bdf8;
+      --accent-amber: #f59e0b;
+      --accent-crimson: #f43f5e;
+      --accent-emerald: #10b981;
+      --accent-violet: #a855f7;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-obsidian);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      cursor: crosshair;
+    }
+
+    #canvas-container.orbit-mode {
+      cursor: grab;
+    }
+
+    #canvas-container.orbit-mode:active {
+      cursor: grabbing;
+    }
+
+    /* Subtle Synchrotron Screen Flash Overlay */
+    #flare-flash {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(125, 211, 252, 0.42), rgba(56, 189, 248, 0.10) 40%, transparent 72%);
+      mix-blend-mode: screen;
+      transition: opacity 0.08s linear;
+    }
+
+    /* Top Telemetry Header Ribbon */
+    #top-telemetry-bar {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: min(1320px, 97vw);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      border: 1px solid var(--panel-border);
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
+      pointer-events: auto;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 170px;
+      flex-shrink: 0;
+    }
+
+    .singularity-emblem {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, #000000 40%, #f59e0b 55%, #38bdf8 74%, rgba(56, 189, 248, 0) 100%);
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
+      flex-shrink: 0;
+    }
+
+    .brand-titles h1 {
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    .brand-titles .subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: var(--accent-cyan);
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .telemetry-grid {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .telemetry-metric {
+      display: flex;
+      flex-direction: column;
+      padding: 4px 8px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      border-radius: 8px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .telemetry-metric .metric-label {
+      font-size: 0.56rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+      margin-bottom: 1px;
+      white-space: nowrap;
+    }
+
+    .telemetry-metric .metric-value {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .metric-value.cyan { color: var(--accent-cyan); }
+    .metric-value.amber { color: var(--accent-amber); }
+    .metric-value.crimson { color: var(--accent-crimson); }
+    .metric-value.emerald { color: var(--accent-emerald); }
+    .metric-value.violet { color: var(--accent-violet); }
+
+    /* Live Event Log Panel (Top-Left below Header) */
+    #event-log-panel {
+      position: fixed;
+      top: 74px;
+      left: 18px;
+      z-index: 9;
+      width: 340px;
+      background: rgba(8, 12, 24, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 9px 12px;
+      pointer-events: none;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 5px;
+    }
+
+    .log-header .pulse-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      margin-right: 6px;
+    }
+
+    #event-log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 112px;
+      overflow: hidden;
+    }
+
+    .log-entry {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      line-height: 1.4;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .log-entry b { color: var(--accent-amber); font-weight: 600; }
+    .log-entry.tde b { color: var(--accent-crimson); }
+    .log-entry.hills b { color: var(--accent-violet); }
+    .log-entry.flare b { color: var(--accent-cyan); }
+
+    /* Floating Cursor & Aim Readout Tags */
+    .floating-tag {
+      position: fixed;
+      z-index: 12;
+      pointer-events: none;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      line-height: 1.45;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(8, 12, 24, 0.86);
+      border: 1px solid var(--panel-border-strong);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text-primary);
+      white-space: nowrap;
+      display: none;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+    }
+
+    #aim-floating-tag {
+      border-color: rgba(245, 158, 11, 0.55);
+    }
+
+    /* Unified Bottom Control Dock */
+    #bottom-dock-wrapper {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: min(1240px, 97vw);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+
+    #bottom-dock-wrapper.collapsed {
+      transform: translate(-50%, calc(100% - 30px));
+    }
+
+    #btn-toggle-dock {
+      pointer-events: auto;
+      background: var(--panel-bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--panel-border);
+      border-bottom: none;
+      padding: 4px 16px;
+      border-radius: 10px 10px 0 0;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    #btn-toggle-dock:hover {
+      color: var(--text-primary);
+      background: var(--panel-elevated);
+    }
+
+    #bottom-control-dock {
+      pointer-events: auto;
+      width: 100%;
+      background: var(--panel-bg);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      border: 1px solid var(--panel-border);
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 11px 16px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dock-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .control-group-inline {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .group-title {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-right: 3px;
+    }
+
+    .pill-btn {
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text-secondary);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 7px;
+      padding: 5px 10px;
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pill-btn:hover {
+      color: var(--text-primary);
+      border-color: rgba(56, 189, 248, 0.48);
+      background: rgba(30, 41, 59, 0.92);
+    }
+
+    .pill-btn.active {
+      color: #030712;
+      background: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .pill-btn.amber-btn {
+      border-color: rgba(245, 158, 11, 0.38);
+      color: #fcd34d;
+    }
+
+    .pill-btn.amber-btn:hover {
+      background: rgba(245, 158, 11, 0.20);
+      border-color: var(--accent-amber);
+    }
+
+    .pill-btn.danger-btn {
+      border-color: rgba(244, 63, 94, 0.38);
+      color: #fda4af;
+    }
+
+    .pill-btn.danger-btn:hover {
+      background: rgba(244, 63, 94, 0.22);
+      border-color: var(--accent-crimson);
+    }
+
+    .sliders-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 9px;
+      align-items: center;
+    }
+
+    .slider-card {
+      background: rgba(15, 23, 42, 0.68);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.66rem;
+    }
+
+    .slider-header label {
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.01em;
+    }
+
+    .slider-header .slider-val {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--accent-cyan);
+      font-size: 0.69rem;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(82, 82, 91, 0.88);
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 2px solid #171717;
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+    }
+
+    @media (max-width: 1120px) {
+      .telemetry-grid { grid-template-columns: repeat(4, auto); }
+      .sliders-grid { grid-template-columns: repeat(4, 1fr); }
+      #event-log-panel { display: none; }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- 3D WebGL Viewport -->
+  <div id="canvas-container" role="application" aria-label="Relativistic Black Hole 3D Physics Sandbox"></div>
+  <div id="flare-flash"></div>
+
+  <!-- Top Live Physics Telemetry HUD -->
+  <header id="top-telemetry-bar">
+    <div class="brand-block">
+      <div class="singularity-emblem" aria-hidden="true"></div>
+      <div class="brand-titles">
+        <h1>Kerr–TDE Relativistic Lab</h1>
+        <div class="subtitle">3D KERR LENSING &amp; N-BODY TDE</div>
+      </div>
+    </div>
+
+    <div class="telemetry-grid">
+      <div class="telemetry-metric">
+        <span class="metric-label">Frame Rate</span>
+        <span class="metric-value emerald" id="hud-fps">60 FPS</span>
+      </div>
+      <div class="telemetry-metric">
+        <span class="metric-label">Shards / Plasma</span>
+        <span class="metric-value amber" id="hud-shards">0 / 0</span>
+      </div>
+      <div class="telemetry-metric">
+        <span class="metric-label">Schwarzschild R<sub>s</sub></span>
+        <span class="metric-value cyan" id="hud-rs">2.00 M (11.8M km)</span>
+      </div>
+      <div class="telemetry-metric">
+        <span class="metric-label">Horizon r<sub>+</sub> / ISCO</span>
+        <span class="metric-value" id="hud-roche">0.87 / 1.74 R_s</span>
+      </div>
+      <div class="telemetry-metric">
+        <span class="metric-label">Roche / Hills</span>
+        <span class="metric-value amber" id="hud-roche-limit">3.85 R_s</span>
+      </div>
+      <div class="telemetry-metric">
+        <span class="metric-label">Time Dilation</span>
+        <span class="metric-value cyan" id="hud-dilation">dτ/dt = 0.894</span>
+      </div>
+      <div class="telemetry-metric">
+        <span class="metric-label">Accreted / Flare L<sub>X</sub></span>
+        <span class="metric-value crimson" id="hud-stress">0.00 M⊕ · 4.3e37</span>
+      </div>
+      <button type="button" class="pill-btn active" id="btn-download-html" title="Download standalone index.html" style="height: 34px; padding: 0 10px; white-space: nowrap; flex-shrink: 0;">⬇ Save HTML</button>
+    </div>
+  </header>
+
+  <!-- Live Relativistic Event Log -->
+  <aside id="event-log-panel" aria-label="Relativistic Event Log">
+    <div class="log-header">
+      <span><i class="pulse-dot"></i>Spacetime Telemetry Log</span>
+      <span id="hud-coord-time">t∞ = 0.00 h</span>
+    </div>
+    <div id="event-log-list"></div>
+  </aside>
+
+  <!-- Floating Cursor Spacetime Probe & Slingshot Aim Readout -->
+  <div id="cursor-floating-tag" class="floating-tag"></div>
+  <div id="aim-floating-tag" class="floating-tag"></div>
+
+  <!-- Collapsible Bottom Control Dock -->
+  <section id="bottom-dock-wrapper" aria-label="Simulation Controls">
+    <button id="btn-toggle-dock" type="button" title="Toggle Controls (Shortcut: H)">▾ Hide Controls [H] · Left-Drag: Slingshot Launch (Click = Auto-Aim) · Right-Drag: Orbit · 1/2/3: Body · R: Random · Space: Pause</button>
+    <div id="bottom-control-dock">
+      <!-- Top Row: Mode, Celestial Body Type, and Preset Scenarios -->
+      <div class="dock-top-row">
+        <div class="control-group-inline" role="group" aria-label="Pointer Mode">
+          <span class="group-title">Pointer:</span>
+          <button type="button" class="pill-btn active" id="mode-launch">Slingshot Launch</button>
+          <button type="button" class="pill-btn" id="mode-orbit">Camera Orbit</button>
+          <button type="button" class="pill-btn" id="btn-plane" title="Toggle Equatorial vs Camera Launch Plane">Plane: Disk</button>
+        </div>
+
+        <div class="control-group-inline" role="group" aria-label="Celestial Body Type">
+          <span class="group-title">Projectile [1-3]:</span>
+          <button type="button" class="pill-btn active" id="type-rocky" data-body-type="rocky">1 · Ringed Super-Earth</button>
+          <button type="button" class="pill-btn" id="type-comet" data-body-type="comet">2 · Outgassing Comet</button>
+          <button type="button" class="pill-btn" id="type-binary" data-body-type="binary">3 · Binary Stars (Hills)</button>
+        </div>
+
+        <div class="control-group-inline" role="group" aria-label="Physics Presets">
+          <span class="group-title">Inject Scenario:</span>
+          <button type="button" class="pill-btn amber-btn" id="preset-tde">Grazing Planet TDE</button>
+          <button type="button" class="pill-btn amber-btn" id="preset-rosette">Comet Rosette</button>
+          <button type="button" class="pill-btn amber-btn" id="preset-binary">Binary Hills Split</button>
+          <button type="button" class="pill-btn amber-btn" id="btn-random">Random [R]</button>
+          <button type="button" class="pill-btn" id="btn-pause">Pause [Space]</button>
+          <button type="button" class="pill-btn" id="btn-audio">Audio: OFF</button>
+          <button type="button" class="pill-btn danger-btn" id="btn-clear">Clear [C]</button>
+        </div>
+      </div>
+
+      <!-- Bottom Row: 7 Physics & Rendering Sliders -->
+      <div class="sliders-grid">
+        <div class="slider-card">
+          <div class="slider-header">
+            <label for="slider-bh-mass">BH Mass (M<sub>BH</sub>)</label>
+            <span class="slider-val" id="val-bh-mass">4.00×10⁶ M☉</span>
+          </div>
+          <input type="range" id="slider-bh-mass" min="0.5" max="2.2" step="0.05" value="1.0" />
+        </div>
+
+        <div class="slider-card">
+          <div class="slider-header">
+            <label for="slider-bh-spin">Kerr Spin (a/M)</label>
+            <span class="slider-val" id="val-bh-spin">+0.680</span>
+          </div>
+          <input type="range" id="slider-bh-spin" min="0.0" max="0.995" step="0.005" value="0.68" />
+        </div>
+
+        <div class="slider-card">
+          <div class="slider-header">
+            <label for="slider-disk-temp">Disk Temp (T<sub>peak</sub>)</label>
+            <span class="slider-val" id="val-disk-temp">6,500 K</span>
+          </div>
+          <input type="range" id="slider-disk-temp" min="2500" max="26000" step="100" value="6500" />
+        </div>
+
+        <div class="slider-card">
+          <div class="slider-header">
+            <label for="slider-time-scale">Time Scale (Δt)</label>
+            <span class="slider-val" id="val-time-scale">1.00×</span>
+          </div>
+          <input type="range" id="slider-time-scale" min="0.0" max="3.0" step="0.05" value="1.0" />
+        </div>
+
+        <div class="slider-card">
+          <div class="slider-header">
+            <label for="slider-body-mass">Projectile Mass</label>
+            <span class="slider-val" id="val-body-mass">1.00 M⊕</span>
+          </div>
+          <input type="range" id="slider-body-mass" min="0.25" max="4.0" step="0.05" value="1.0" />
+        </div>
+
+        <div class="slider-card">
+          <div class="slider-header">
+            <label for="slider-launch-speed">Slingshot Gain (v<sub>0</sub>)</label>
+            <span class="slider-val" id="val-launch-speed">1.00×</span>
+          </div>
+          <input type="range" id="slider-launch-speed" min="0.3" max="2.5" step="0.05" value="1.0" />
+        </div>
+
+        <div class="slider-card">
+          <div class="slider-header">
+            <label for="slider-bloom">Bloom Intensity</label>
+            <span class="slider-val" id="val-bloom">0.42</span>
+          </div>
+          <input type="range" id="slider-bloom" min="0.0" max="1.8" step="0.02" value="0.42" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+    /* =========================================================================
+       1. RELATIVISTIC KERR GEODESIC & 3D SCENE REPROJECTION LENSING SHADER
+       Integrates null geodesics in curved Kerr spacetime:
+         d²x/dλ² = -3 M h² x / r⁵   +   Lense-Thirring frame dragging (2 a M² / r³)
+       At every curved ray step, reprojects the 3D position p via uViewProj
+       into the offscreen 3D scene depth/color buffer (tDepth, tScene) so
+       planets, rings, molten shards, and plasma tails behind the black hole
+       are genuinely gravitationally lensed into Einstein rings!
+       ========================================================================= */
+    const LENS_VERT = /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+
+    const LENS_FRAG = /* glsl */ `
+      #include <packing>
+      precision highp float;
+
+      uniform sampler2D tScene;
+      uniform sampler2D tDepth;
+      uniform vec3  uCamPos;
+      uniform mat4  uInvProj;
+      uniform mat4  uCamWorld;
+      uniform mat4  uViewProj;
+      uniform float uNear;
+      uniform float uFar;
+      uniform float uMass;
+      uniform float uSpin;
+      uniform float uHorizon;
+      uniform float uPhotonR;
+      uniform float uDiskIn;
+      uniform float uDiskOut;
+      uniform float uDiskTemp;
+      uniform float uDiskBright;
+      uniform float uTime;
+      uniform float uFlare;
+      uniform float uFlarePhi;
+      uniform float uFlareR;
+      uniform float uJet;
+      uniform float uJetLen;
+      uniform float uFastB;
+      uniform float uEscapeR;
+      uniform float uHasScene;
+      uniform int   uSteps;
+
+      varying vec2 vUv;
+
+      #define MAX_STEPS 340
+
+      float hash13(vec3 p3) {
+        p3 = fract(p3 * 0.1031);
+        p3 += dot(p3, p3.zyx + 31.32);
+        return fract((p3.x + p3.y) * p3.z);
+      }
+
+      vec3 hash33(vec3 p3) {
+        p3 = fract(p3 * vec3(0.1031, 0.1030, 0.0973));
+        p3 += dot(p3, p3.yxz + 33.33);
+        return fract((p3.xxy + p3.yxx) * p3.zyx);
+      }
+
+      float vnoise(vec3 x) {
+        vec3 i = floor(x);
+        vec3 f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash13(i), hash13(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash13(i + vec3(0.0, 1.0, 0.0)), hash13(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash13(i + vec3(0.0, 0.0, 1.0)), hash13(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash13(i + vec3(0.0, 1.0, 1.0)), hash13(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      float fbm(vec3 p) {
+        float s = 0.0, a = 0.5;
+        for (int i = 0; i < 5; i++) {
+          s += a * vnoise(p);
+          p = p * 2.02 + vec3(1.7, 9.2, 3.3);
+          a *= 0.5;
+        }
+        return s / 0.96875;
+      }
+
+      float fbm3(vec3 p) {
+        float s = 0.0, a = 0.5;
+        for (int i = 0; i < 3; i++) {
+          s += a * vnoise(p);
+          p = p * 2.07 + vec3(5.1, 1.3, 7.7);
+          a *= 0.5;
+        }
+        return s / 0.875;
+      }
+
+      // Linear-space Planckian Blackbody RGB (Kelvin -> linear HDR RGB)
+      vec3 blackbody(float T) {
+        float t = clamp(T, 1000.0, 40000.0) / 100.0;
+        vec3 c;
+        c.r = t <= 66.0 ? 1.0 : clamp(1.29293618 * pow(t - 60.0, -0.1332047592), 0.0, 1.0);
+        c.g = t <= 66.0
+          ? clamp(0.39008157876 * log(t) - 0.63184144378, 0.0, 1.0)
+          : clamp(1.12989086089 * pow(t - 60.0, -0.0755148492), 0.0, 1.0);
+        c.b = t >= 66.0
+          ? 1.0
+          : (t <= 19.0 ? 0.0 : clamp(0.54320678911 * log(t - 10.0) - 1.19625408914, 0.0, 1.0));
+        return pow(c, vec3(2.2));
+      }
+
+      vec3 starLayer(vec3 d, float scale, float dens, float sz) {
+        vec3 c = d * scale;
+        vec3 id = floor(c);
+        vec3 f = fract(c);
+        vec3 h = hash33(id + 11.7);
+        if (h.x > dens) return vec3(0.0);
+        vec3 sp = 0.3 + 0.4 * hash33(id + 3.1);
+        vec3 dv = f - sp;
+        float b = max(exp(-dot(dv, dv) / (sz * sz)) - 0.015, 0.0) * (0.35 + 1.45 * pow(h.y, 8.0));
+        float T = 2600.0 + 13500.0 * h.z * h.z;
+        return blackbody(T) * b;
+      }
+
+      vec3 background(vec3 d, vec3 camDir) {
+        float n1 = fbm(d * 1.8 + vec3(3.1, 1.7, 8.2));
+        float n2 = fbm(d * 3.6 + vec3(n1 * 2.0) + vec3(9.4, 2.2, 5.1));
+        vec3 bandN = normalize(vec3(0.25, 1.0, -0.35));
+        float bd = dot(d, bandN);
+        float band = exp(-bd * bd * 9.0);
+        vec3 col = mix(vec3(0.26, 0.06, 0.38), vec3(0.04, 0.20, 0.40), smoothstep(0.35, 0.65, n1));
+        col = mix(col, vec3(0.62, 0.20, 0.09), smoothstep(0.55, 0.8, n2) * 0.52);
+        float dens = pow(smoothstep(0.42, 0.8, n2 * 0.55 + n1 * 0.5), 1.8);
+        float lanes = smoothstep(0.45, 0.7, fbm3(d * 7.0 + vec3(2.0)));
+        vec3 neb = col * dens * (0.055 + 0.20 * band);
+        vec3 milky = vec3(0.055, 0.052, 0.072) * band * (0.5 + 0.8 * n2) * (1.0 - 0.75 * lanes);
+
+        vec3 sky = neb + milky + vec3(0.002, 0.0025, 0.006);
+        sky += starLayer(d, 72.0, 0.23, 0.10) * 1.35;
+        sky += starLayer(d, 165.0, 0.21, 0.12) * 0.75;
+        sky += starLayer(d, 345.0, 0.15, 0.13) * 0.48;
+        return sky;
+      }
+
+      // Relativistic Novikov-Thorne Accretion Disk Shading with Doppler Beaming & Kerr Redshift
+      vec4 diskShade(vec3 hp, vec3 rayDir, float r) {
+        float M = uMass;
+        float x = r / uDiskIn;
+        float fT = pow(x, -0.75) * pow(max(1.0 - 0.985 * inversesqrt(x), 0.0), 0.25) / 0.49;
+        float phi = atan(hp.z, hp.x);
+
+        // Kerr prograde Keplerian angular velocity
+        float omega = sqrt(M) / (pow(r, 1.5) + uSpin * pow(M, 1.5));
+        float ph0 = phi + omega * uTime;
+        vec3 ring = vec3(cos(ph0), sin(ph0), 0.0);
+
+        float n  = fbm(ring * 1.85 + vec3(0.0, 0.0, r * 1.38));
+        float n2 = fbm3(ring * 5.8 + vec3(0.0, 0.0, r * 4.45) + 7.3);
+        float dens = smoothstep(0.28, 0.86, n * 0.72 + n2 * 0.48);
+        dens = 0.10 + 0.96 * dens;
+        dens *= 0.70 + 0.30 * sin(r * 3.45 + n * 5.4);
+
+        float edge = smoothstep(uDiskIn, uDiskIn * 1.08, r) * (1.0 - smoothstep(uDiskOut * 0.56, uDiskOut, r));
+        dens *= edge;
+
+        // Relativistic Doppler Factor delta & Kerr Lapse Redshift
+        vec3 tang = normalize(vec3(hp.z, 0.0, -hp.x));
+        float beta = clamp(sqrt(M / r), 0.0, 0.90);
+        float gamma = inversesqrt(1.0 - beta * beta);
+        float dop = 1.0 / (gamma * (1.0 + beta * dot(tang, rayDir)));
+
+        float a = uSpin * M;
+        float lapse = sqrt(max(1.0 - 2.0 * M / r + a * a / (r * r), 0.004));
+        float g = dop * lapse;
+
+        float T = (uDiskTemp * 0.76) * pow(fT, 1.15) * pow(g, 0.85);
+        vec3 col = blackbody(T) * uDiskBright * min(pow(g, 2.8), 6.5) * (0.12 + fT * fT * 0.72) * dens;
+
+        // Orbiting Synchrotron Hot-Spot Flare inside inner accretion disk
+        float dphi = phi - uFlarePhi;
+        dphi = atan(sin(dphi), cos(dphi));
+        float rr = (r - uFlareR) / (0.35 * uFlareR);
+        float hot = uFlare * exp(-dphi * dphi * 3.2) * exp(-rr * rr);
+        col += hot * min(pow(g, 2.2), 5.0) * vec3(0.52, 0.76, 1.05) * 0.65 * edge;
+
+        float alpha = clamp(dens * 1.18, 0.0, 0.95);
+        return vec4(col * alpha, alpha);
+      }
+
+      vec3 cameraRay(vec2 uv) {
+        vec4 ndc = vec4(uv * 2.0 - 1.0, 1.0, 1.0);
+        vec4 vd = uInvProj * ndc;
+        vd /= vd.w;
+        return normalize((uCamWorld * vec4(vd.xyz, 0.0)).xyz);
+      }
+
+      vec3 geoAccel(vec3 p, vec3 v) {
+        vec3 L = cross(p, v);
+        float h2 = dot(L, L);
+        float r2 = dot(p, p);
+        float r5 = r2 * r2 * sqrt(r2);
+        return -3.0 * uMass * h2 * p / r5;
+      }
+
+      void main() {
+        vec2 uv = vUv;
+        vec3 ro = uCamPos;
+        vec3 rd = cameraRay(uv);
+        vec3 camForward = normalize(-ro);
+        float M = uMass;
+        vec3 col = vec3(0.0);
+        float trans = 1.0;
+
+        // 1. Weak-field fast path for outer rays far outside the accretion disk
+        float b = length(cross(ro, rd));
+        if (b > uFastB) {
+          float s0 = dot(ro, rd);
+          float defl = 2.0 * M / b * (1.0 - s0 / sqrt(b * b + s0 * s0));
+          vec3 c = ro - s0 * rd;
+          vec3 toward = -c / max(length(c), 1e-4);
+          vec3 nd = normalize(rd * cos(defl) + toward * sin(defl));
+          vec3 bg = background(nd, camForward);
+          float dz = texture2D(tDepth, uv).x;
+          if (dz < 1.0) {
+            vec4 sc = texture2D(tScene, uv);
+            col = sc.a > 0.5 ? sc.rgb : bg + sc.rgb;
+          } else {
+            col = bg;
+          }
+          gl_FragColor = vec4(col, 1.0);
+          return;
+        }
+
+        // 2. Strong-field Geodesic Integration (Velocity Verlet + Kerr Frame Dragging)
+        vec3 p = ro;
+        vec3 v = rd;
+        bool captured = false;
+        bool addHit = false;
+        float minR = 1e6;
+
+        for (int i = 0; i < MAX_STEPS; i++) {
+          if (i >= uSteps) break;
+          float r = length(p);
+          minR = min(minR, r);
+
+          float dt = clamp(0.058 * (r - 0.85 * uHorizon), 0.008, 2.8);
+          vec3 pPrev = p;
+          v += geoAccel(p, v) * (0.5 * dt);
+          p += v * dt;
+          v += geoAccel(p, v) * (0.5 * dt);
+          float r2 = length(p);
+          minR = min(minR, r2);
+
+          // Lense-Thirring frame dragging about Kerr spin axis (+Y)
+          float w = 2.0 * uSpin * M * M / (r2 * r2 * r2) * dt;
+          float cw = cos(w), sw = sin(w);
+          v = vec3(v.x * cw + v.z * sw, v.y, -v.x * sw + v.z * cw);
+
+          // Equatorial thin-disk intersection (primary image + secondary/tertiary lensed photon arches)
+          if (pPrev.y * p.y < 0.0) {
+            float t = pPrev.y / (pPrev.y - p.y);
+            vec3 hit = mix(pPrev, p, t);
+            float rr = length(hit.xz);
+            if (rr > uDiskIn && rr < uDiskOut) {
+              vec4 dc = diskShade(hit, normalize(v), rr);
+              col += trans * dc.rgb;
+              trans *= 1.0 - dc.a;
+            }
+          }
+
+          // Relativistic Polar Blandford-Znajek Synchrotron Jets along spin axis
+          if (uJet > 0.001) {
+            float rho = length(p.xz);
+            float ay = abs(p.y);
+            if (ay > uHorizon && ay < uJetLen) {
+              float wd = 0.14 + ay * 0.026;
+              if (rho < wd * 3.0) {
+                float bFade = smoothstep(uFastB * 0.94, uFastB * 0.55, b);
+                float j = exp(-rho * rho / (wd * wd)) * smoothstep(uHorizon, uHorizon * 2.4, ay) * (1.0 - ay / uJetLen) * bFade;
+                float knots = 0.55 + 0.45 * vnoise(vec3(ay * 0.92 - uTime * 0.26, rho * 3.0, sign(p.y)));
+                col += trans * uJet * j * knots * vec3(0.34, 0.56, 1.0) * dt * length(v) * 0.22;
+              }
+            }
+          }
+
+          // Gravitationally Lensed 3D Scene Objects (Reproject curved ray position p into screen space)
+          if (uHasScene > 0.5) {
+            vec4 clip = uViewProj * vec4(p, 1.0);
+            if (clip.w > uNear) {
+              vec2 suv = clip.xy / clip.w * 0.5 + 0.5;
+              if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) {
+                float dz = texture2D(tDepth, suv).x;
+                if (dz < 1.0) {
+                  float sz = -perspectiveDepthToViewZ(dz, uNear, uFar);
+                  float pz = clip.w;
+                  if (pz >= sz && pz - sz < dt * length(v) * 1.32 + 0.30) {
+                    vec4 sc = texture2D(tScene, suv);
+                    if (sc.a > 0.5) {
+                      col += trans * sc.rgb;
+                      trans = 0.0;
+                      break;
+                    } else if (!addHit) {
+                      col += trans * sc.rgb;
+                      addHit = true;
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          if (r2 < uHorizon * 1.02) { captured = true; break; }
+          if (r2 > uEscapeR && dot(p, v) > 0.0) break;
+          if (trans < 0.004) break;
+        }
+
+        if (!captured && trans > 0.004) {
+          col += trans * background(normalize(v), camForward);
+        }
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    /* =========================================================================
+       2. RELATIVISTIC KERR PARAMETERS, WEB AUDIO, HEAT LUT & THREE.JS PIPELINE
+       Geometric units G = c = 1, scaled to a Sgr A*-class 4.0×10⁶ M☉ black hole
+       ========================================================================= */
+    const P = {
+      M: 1.0,
+      spin: 0.68,
+      diskTemp: 6500,
+      timeScale: 1.0,
+      bloom: 0.42,
+      projType: 'rocky',
+      projMass: 1.0,
+      velMult: 1.0,
+      plane: 'disk',
+      mode: 'launch',
+      paused: false,
+      audioEnabled: false
+    };
+
+    const TIME_UNIT = 40.0;
+    const MSUN_PER_M = 4.0e6;
+    const RHO = { rocky: 0.004757, comet: 0.000809, star: 0.0099 };
+    const BASE_MASS = { rocky: 0.0102, comet: 0.0004, star: 0.012 };
+    const ROCHE_K = 2.44;
+    const BINARY_SEP = 3.0;
+
+    const D = { Rs: 2, rH: 1.73, isco: 3.4, diskIn: 3.4, diskOut: 18, photon: 2.1, killR: 2.0, fastB: 34 };
+    let gM = 1.0, gJ = 0.68;
+
+    function iscoRadius(M, a) {
+      const z1 = 1 + Math.cbrt(1 - a * a) * (Math.cbrt(1 + a) + Math.cbrt(1 - a));
+      const z2 = Math.sqrt(3 * a * a + z1 * z1);
+      return M * (3 + z2 - Math.sqrt(Math.max(0, (3 - z1) * (3 + z1 + 2 * z2))));
+    }
+
+    function updateDerived() {
+      const M = P.M, a = Math.min(P.spin, 0.998);
+      D.Rs = 2 * M;
+      D.rH = M * (1 + Math.sqrt(Math.max(0.0001, 1 - a * a)));
+      D.isco = iscoRadius(M, a);
+      D.diskIn = D.isco;
+      D.diskOut = 9 * M + 9;
+      D.photon = 2 * M * (1 + Math.cos((2 / 3) * Math.acos(-a)));
+      D.killR = Math.max(D.rH * 1.12, 1.5 * M);
+      D.fastB = Math.max(D.diskOut * 1.85, 34 * M);
+      gM = M;
+      gJ = a * M * M;
+    }
+
+    function rocheRadius(type) {
+      const t = type === 'binary' ? 'star' : type;
+      return ROCHE_K * Math.cbrt(3 * P.M / (4 * Math.PI * RHO[t]));
+    }
+
+    function projMass(type) {
+      return BASE_MASS[type === 'binary' ? 'star' : type] * P.projMass;
+    }
+
+    function hillsRadius(m) {
+      return BINARY_SEP * Math.cbrt(P.M / (2 * m));
+    }
+
+    function guideRadius(type) {
+      return type === 'binary' ? hillsRadius(projMass('binary')) : rocheRadius(type);
+    }
+
+    function kerrLapse(r) {
+      const M = P.M, a = P.spin * M;
+      const del = r * r - 2 * M * r + a * a;
+      if (del <= 0) return 0;
+      const A = (r * r + a * a) ** 2 - a * a * del;
+      return Math.sqrt(del * r * r / A);
+    }
+    updateDerived();
+
+    // Procedural Web Audio Synthesizer (Gravitational Drone + TDE Disruption + Synchrotron Chirp)
+    class RelativisticAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.droneOsc = null;
+      }
+      toggle() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = 0.15;
+          this.masterGain.connect(this.ctx.destination);
+
+          this.droneOsc = this.ctx.createOscillator();
+          this.droneOsc.type = 'sine';
+          this.droneOsc.frequency.value = 46;
+          const droneGain = this.ctx.createGain();
+          droneGain.gain.value = 0.32;
+          this.droneOsc.connect(droneGain);
+          droneGain.connect(this.masterGain);
+          this.droneOsc.start();
+          P.audioEnabled = true;
+          return true;
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+          P.audioEnabled = true;
+        } else {
+          this.ctx.suspend();
+          P.audioEnabled = false;
+        }
+        return P.audioEnabled;
+      }
+      triggerDisruptionBurst() {
+        if (!this.ctx || !P.audioEnabled) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(185, now);
+        osc.frequency.exponentialRampToValueAtTime(36, now + 0.75);
+        gain.gain.setValueAtTime(0.42, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now);
+        osc.stop(now + 0.82);
+      }
+      triggerSynchrotronChirp() {
+        if (!this.ctx || !P.audioEnabled) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(340 + Math.random() * 260, now);
+        osc.frequency.exponentialRampToValueAtTime(1080, now + 0.16);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now);
+        osc.stop(now + 0.20);
+      }
+    }
+    const audioEngine = new RelativisticAudioEngine();
+
+    // Utilities & Blackbody Emissive Heat LUT
+    const rand = Math.random;
+    const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
+    const $ = (id) => document.getElementById(id);
+
+    function hashInt(x, y, z) {
+      let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(z | 0, 1274126177)) | 0;
+      h = Math.imul(h ^ (h >>> 13), 1103515245);
+      h ^= h >>> 16;
+      return (h >>> 0) / 4294967296;
+    }
+
+    function vnoise3(x, y, z) {
+      const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+      const xf = x - xi, yf = y - yi, zf = z - zi;
+      const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf);
+      const l = (a, b, t) => a + (b - a) * t;
+      const c000 = hashInt(xi, yi, zi), c100 = hashInt(xi + 1, yi, zi);
+      const c010 = hashInt(xi, yi + 1, zi), c110 = hashInt(xi + 1, yi + 1, zi);
+      const c001 = hashInt(xi, yi, zi + 1), c101 = hashInt(xi + 1, yi, zi + 1);
+      const c011 = hashInt(xi, yi + 1, zi + 1), c111 = hashInt(xi + 1, yi + 1, zi + 1);
+      return l(l(l(c000, c100, u), l(c010, c110, u), v), l(l(c001, c101, u), l(c011, c111, u), v), w);
+    }
+
+    function fbm3(x, y, z, oct = 5) {
+      let a = 0.5, f = 1, s = 0, n = 0;
+      for (let i = 0; i < oct; i++) {
+        s += a * vnoise3(x * f, y * f, z * f);
+        n += a; a *= 0.5; f *= 2.03;
+      }
+      return s / n;
+    }
+
+    function blackbodyRGB(T) {
+      const t = clamp(T, 1000, 40000) / 100;
+      let r, g, b;
+      if (t <= 66) {
+        r = 1;
+        g = clamp(0.39008157876 * Math.log(t) - 0.63184144378, 0, 1);
+      } else {
+        r = clamp(1.29293618606 * Math.pow(t - 60, -0.1332047592), 0, 1);
+        g = clamp(1.12989086089 * Math.pow(t - 60, -0.0755148492), 0, 1);
+      }
+      if (t >= 66) b = 1;
+      else if (t <= 19) b = 0;
+      else b = clamp(0.54320678911 * Math.log(t - 10) - 1.19625408914, 0, 1);
+      return [r ** 2.2, g ** 2.2, b ** 2.2];
+    }
+
+    const HEAT_LUT_N = 512, HEAT_MAX = 5.0;
+    const HEAT_LUT = new Float32Array(HEAT_LUT_N * 3);
+    for (let i = 0; i < HEAT_LUT_N; i++) {
+      const h = (i / (HEAT_LUT_N - 1)) * HEAT_MAX;
+      const c = blackbodyRGB(500 + h * 2100);
+      const I = h < 0.22 ? 0 : Math.min(1.45, Math.pow(h - 0.22, 1.15) * 0.68);
+      HEAT_LUT[i * 3] = c[0] * I;
+      HEAT_LUT[i * 3 + 1] = c[1] * I;
+      HEAT_LUT[i * 3 + 2] = c[2] * I;
+    }
+
+    const PALETTES = {
+      terra: [[0, .03, .08, .24], [.45, .05, .22, .52], [.50, .72, .66, .46], [.55, .14, .38, .12], [.70, .35, .28, .18], [.82, .86, .88, .92], [1, 1, 1, 1]],
+      mars:  [[0, .20, .07, .04], [.40, .48, .18, .07], [.62, .72, .36, .16], [.82, .86, .62, .42], [1, .96, .91, .86]],
+      lava:  [[0, 1.0, .36, .06], [.38, .92, .22, .03], [.46, .10, .07, .07], [.72, .20, .17, .16], [1, .38, .34, .32]],
+      ice:   [[0, .18, .25, .36], [.45, .46, .60, .72], [.72, .82, .91, .97], [1, .97, .99, 1]]
+    };
+
+    function samplePalette(pal, e) {
+      e = clamp(e, 0, 1);
+      for (let i = 1; i < pal.length; i++) {
+        if (e <= pal[i][0]) {
+          const a = pal[i - 1], b = pal[i], t = (e - a[0]) / ((b[0] - a[0]) || 1);
+          return [a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, a[3] + (b[3] - a[3]) * t];
+        }
+      }
+      const l = pal[pal.length - 1];
+      return [l[1], l[2], l[3]];
+    }
+
+    // Three.js Renderer, Scene, Overlay & Offscreen Lensed HDR RenderTarget
+    const container = $('canvas-container');
+    const isHeadless = navigator.webdriver || /HeadlessChrome/i.test(navigator.userAgent);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: false,
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: true
+    });
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    renderer.setClearColor(0x000000, 0);
+    renderer.autoClear = false;
+    container.appendChild(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(54, innerWidth / innerHeight, 0.1, 2000);
+    camera.position.set(0, 7.2, 38.5);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.065;
+    controls.enablePan = false;
+    controls.minDistance = 7;
+    controls.maxDistance = 155;
+    controls.rotateSpeed = 0.65;
+    controls.mouseButtons = { LEFT: -1, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+    controls.touches = { ONE: -1, TWO: THREE.TOUCH.DOLLY_ROTATE };
+
+    const sceneRT = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: true });
+    sceneRT.depthTexture = new THREE.DepthTexture(4, 4);
+    sceneRT.depthTexture.type = THREE.UnsignedIntType;
+
+    const scene = new THREE.Scene();
+    const overlay = new THREE.Scene();
+
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmremGenerator.dispose();
+
+    const ambientLight = new THREE.AmbientLight(0x3a486e, 0.62);
+    scene.add(ambientLight);
+    const bhLight = new THREE.PointLight(0xffd6a8, 3.6, 0, 0);
+    bhLight.position.set(0, 0, 0);
+    scene.add(bhLight);
+
+    const lensMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tScene: { value: sceneRT.texture },
+        tDepth: { value: sceneRT.depthTexture },
+        uCamPos: { value: new THREE.Vector3() },
+        uInvProj: { value: new THREE.Matrix4() },
+        uCamWorld: { value: new THREE.Matrix4() },
+        uViewProj: { value: new THREE.Matrix4() },
+        uNear: { value: camera.near },
+        uFar: { value: camera.far },
+        uMass: { value: 1.0 },
+        uSpin: { value: 0.68 },
+        uHorizon: { value: 1.73 },
+        uPhotonR: { value: 2.1 },
+        uDiskIn: { value: 3.4 },
+        uDiskOut: { value: 18.0 },
+        uDiskTemp: { value: 6500 },
+        uDiskBright: { value: 1.7 },
+        uTime: { value: 0 },
+        uFlare: { value: 0 },
+        uFlarePhi: { value: 0 },
+        uFlareR: { value: 4.5 },
+        uJet: { value: 0 },
+        uJetLen: { value: 22 },
+        uFastB: { value: 24 },
+        uEscapeR: { value: 60 },
+        uHasScene: { value: 1 },
+        uSteps: { value: 220 }
+      },
+      vertexShader: LENS_VERT,
+      fragmentShader: LENS_FRAG,
+      depthTest: false,
+      depthWrite: false
+    });
+    const LU = lensMat.uniforms;
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new ShaderPass(lensMat));
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.42, 0.44, 0.94);
+    composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
+
+    /* =========================================================================
+       3. DUAL-TIER SPAGHETTIFICATION ENGINE: 10,000 SHARDS + 18,000 PLASMA DUST
+       ========================================================================= */
+    const MAX_SHARDS = 10000;
+    const S = {
+      n: 0,
+      px: new Float64Array(MAX_SHARDS), py: new Float64Array(MAX_SHARDS), pz: new Float64Array(MAX_SHARDS),
+      vx: new Float64Array(MAX_SHARDS), vy: new Float64Array(MAX_SHARDS), vz: new Float64Array(MAX_SHARDS),
+      rad: new Float32Array(MAX_SHARDS), mass: new Float32Array(MAX_SHARDS), heat: new Float32Array(MAX_SHARDS),
+      mat: new Uint8Array(MAX_SHARDS), ang: new Float32Array(MAX_SHARDS), angRate: new Float32Array(MAX_SHARDS),
+      cr: new Float32Array(MAX_SHARDS), cg: new Float32Array(MAX_SHARDS), cb: new Float32Array(MAX_SHARDS),
+      age: new Float32Array(MAX_SHARDS)
+    };
+    const SHARD_FIELDS = ['px', 'py', 'pz', 'vx', 'vy', 'vz', 'rad', 'mass', 'heat', 'mat', 'ang', 'angRate', 'cr', 'cg', 'cb', 'age'];
+
+    function removeShard(i) {
+      const last = --S.n;
+      if (i !== last) {
+        for (let k = 0; k < SHARD_FIELDS.length; k++) {
+          const a = S[SHARD_FIELDS[k]];
+          a[i] = a[last];
+        }
+      }
+    }
+
+    function addShard(x, y, z, vx, vy, vz, rad, mass, heat, mat, r, g, b) {
+      if (S.n >= MAX_SHARDS) return -1;
+      const i = S.n++;
+      S.px[i] = x; S.py[i] = y; S.pz[i] = z;
+      S.vx[i] = vx; S.vy[i] = vy; S.vz[i] = vz;
+      S.rad[i] = rad; S.mass[i] = mass; S.heat[i] = heat; S.mat[i] = mat;
+      S.ang[i] = rand() * 6.283; S.angRate[i] = (rand() - 0.5) * 0.16;
+      S.cr[i] = r; S.cg[i] = g; S.cb[i] = b; S.age[i] = 0;
+      return i;
+    }
+
+    const shardGeo = new THREE.DodecahedronGeometry(1, 0);
+    const shardEmit = new Float32Array(MAX_SHARDS * 3);
+    const shardEmitAttr = new THREE.InstancedBufferAttribute(shardEmit, 3);
+    shardEmitAttr.setUsage(THREE.DynamicDrawUsage);
+    shardGeo.setAttribute('aEmit', shardEmitAttr);
+
+    const shardMat = new THREE.MeshStandardMaterial({ roughness: 0.82, metalness: 0.08, flatShading: true });
+    shardMat.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute vec3 aEmit;\nvarying vec3 vEmit;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvEmit = aEmit;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vEmit;')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vEmit;');
+    };
+
+    const shardMesh = new THREE.InstancedMesh(shardGeo, shardMat, MAX_SHARDS);
+    shardMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    shardMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_SHARDS * 3), 3);
+    shardMesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    shardMesh.count = 0;
+    shardMesh.frustumCulled = false;
+    scene.add(shardMesh);
+
+    // 18,000 HDR Plasma / Outgassing / Collision Spark Particles
+    const MAX_DUST = 18000;
+    const DU = {
+      n: 0,
+      px: new Float32Array(MAX_DUST), py: new Float32Array(MAX_DUST), pz: new Float32Array(MAX_DUST),
+      vx: new Float32Array(MAX_DUST), vy: new Float32Array(MAX_DUST), vz: new Float32Array(MAX_DUST),
+      life: new Float32Array(MAX_DUST), max: new Float32Array(MAX_DUST),
+      r: new Float32Array(MAX_DUST), g: new Float32Array(MAX_DUST), b: new Float32Array(MAX_DUST),
+      size: new Float32Array(MAX_DUST), beta: new Float32Array(MAX_DUST)
+    };
+    const DUST_FIELDS = ['px', 'py', 'pz', 'vx', 'vy', 'vz', 'life', 'max', 'r', 'g', 'b', 'size', 'beta'];
+
+    function spawnDust(x, y, z, vx, vy, vz, r, g, b, size, life, beta) {
+      if (DU.n >= MAX_DUST) return;
+      const i = DU.n++;
+      DU.px[i] = x; DU.py[i] = y; DU.pz[i] = z;
+      DU.vx[i] = vx; DU.vy[i] = vy; DU.vz[i] = vz;
+      DU.life[i] = life; DU.max[i] = life;
+      DU.r[i] = r; DU.g[i] = g; DU.b[i] = b;
+      DU.size[i] = size; DU.beta[i] = beta;
+    }
+
+    function removeDust(i) {
+      const last = --DU.n;
+      if (i !== last) {
+        for (let k = 0; k < DUST_FIELDS.length; k++) {
+          const a = DU[DUST_FIELDS[k]];
+          a[i] = a[last];
+        }
+      }
+    }
+
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(MAX_DUST * 3);
+    const dustCol = new Float32Array(MAX_DUST * 3);
+    const dustSize = new Float32Array(MAX_DUST);
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3).setUsage(THREE.DynamicDrawUsage));
+    dustGeo.setAttribute('aColor', new THREE.BufferAttribute(dustCol, 3).setUsage(THREE.DynamicDrawUsage));
+    dustGeo.setAttribute('aSize', new THREE.BufferAttribute(dustSize, 1).setUsage(THREE.DynamicDrawUsage));
+    dustGeo.setDrawRange(0, 0);
+
+    const dustMat = new THREE.ShaderMaterial({
+      uniforms: { uScale: { value: 500 } },
+      vertexShader: /* glsl */ `
+        attribute vec3 aColor;
+        attribute float aSize;
+        uniform float uScale;
+        varying vec3 vColor;
+        void main() {
+          vColor = aColor;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = clamp(aSize * uScale / max(-mv.z, 0.1), 1.0, 44.0);
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        varying vec3 vColor;
+        void main() {
+          vec2 c = gl_PointCoord - 0.5;
+          float d = dot(c, c);
+          if (d > 0.25) discard;
+          float k = 1.0 - d * 4.0;
+          gl_FragColor = vec4(vColor * (0.35 + 1.65 * k * k), 0.0);
+        }
+      `,
+      blending: THREE.NoBlending,
+      depthWrite: true,
+      depthTest: true
+    });
+    const dustPoints = new THREE.Points(dustGeo, dustMat);
+    dustPoints.frustumCulled = false;
+    scene.add(dustPoints);
+
+    /* =========================================================================
+       4. 3D OVERLAY GUIDES: PREDICTIVE GEODESIC ORBIT, SLINGSHOT & ROCHE SPHERE
+       ========================================================================= */
+    const PRED_MAX = 1500;
+    const trajGeo = new THREE.BufferGeometry();
+    trajGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(PRED_MAX * 3), 3).setUsage(THREE.DynamicDrawUsage));
+    trajGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(PRED_MAX * 3), 3).setUsage(THREE.DynamicDrawUsage));
+    trajGeo.setDrawRange(0, 0);
+    const trajLine = new THREE.Line(
+      trajGeo,
+      new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.95, depthTest: false, toneMapped: false })
+    );
+    trajLine.frustumCulled = false;
+    trajLine.visible = false;
+    overlay.add(trajLine);
+
+    const arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1, 0x38bdf8, 0.85, 0.48);
+    arrow.line.material.depthTest = false; arrow.line.material.toneMapped = false;
+    arrow.cone.material.depthTest = false; arrow.cone.material.toneMapped = false;
+    arrow.visible = false;
+    overlay.add(arrow);
+
+    const ghost = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 20, 14),
+      new THREE.MeshBasicMaterial({ color: 0x7dd3fc, wireframe: true, transparent: true, opacity: 0.48, depthTest: false, toneMapped: false })
+    );
+    ghost.visible = false;
+    overlay.add(ghost);
+
+    function makeCircle(segments) {
+      const pts = [];
+      for (let i = 0; i < segments; i++) {
+        const a = (i / segments) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.cos(a), Math.sin(a), 0));
+      }
+      return new THREE.BufferGeometry().setFromPoints(pts);
+    }
+
+    const rocheMat = new THREE.LineDashedMaterial({
+      color: 0xff8a3d,
+      dashSize: 0.05,
+      gapSize: 0.035,
+      transparent: true,
+      opacity: 0.34,
+      depthTest: false,
+      toneMapped: false
+    });
+    const rocheDisk = new THREE.LineLoop(makeCircle(160), rocheMat);
+    rocheDisk.computeLineDistances();
+    rocheDisk.rotation.x = -Math.PI / 2;
+    const rocheBill = new THREE.LineLoop(makeCircle(160), rocheMat);
+    rocheBill.computeLineDistances();
+    overlay.add(rocheDisk, rocheBill);
+
+    /* =========================================================================
+       5. COMPOSITE CELESTIAL BODIES (RINGED PLANETS, COMETS & BINARY STARS)
+       ========================================================================= */
+    const bodies = [];
+    let bodyCounter = 0;
+    const GREEK = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω'];
+    const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+    const AXIS_X = new THREE.Vector3(1, 0, 0);
+
+    function bodyRadius(type, mass) {
+      const t = type === 'binary' ? 'star' : type;
+      return Math.cbrt(3 * mass / (4 * Math.PI * RHO[t]));
+    }
+
+    function createFresnelRimMaterial(hexColor, power = 2.8, intensity = 1.15) {
+      return new THREE.ShaderMaterial({
+        uniforms: {
+          uColor: { value: new THREE.Color(hexColor) },
+          uPower: { value: power },
+          uIntensity: { value: intensity }
+        },
+        vertexShader: /* glsl */ `
+          varying vec3 vNormal;
+          varying vec3 vWorldPos;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPos = wp.xyz;
+            gl_Position = projectionMatrix * viewMatrix * wp;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform vec3 uColor;
+          uniform float uPower;
+          uniform float uIntensity;
+          varying vec3 vNormal;
+          varying vec3 vWorldPos;
+          void main() {
+            vec3 viewDir = normalize(cameraPosition - vWorldPos);
+            float rim = pow(clamp(1.0 - abs(dot(vNormal, viewDir)), 0.0, 1.0), uPower);
+            gl_FragColor = vec4(uColor * rim * uIntensity, 0.85);
+          }
+        `,
+        transparent: true,
+        depthWrite: false,
+        side: THREE.BackSide
+      });
+    }
+
+    function makeRockGeometry(R, palName, seed, comet) {
+      const geo = new THREE.IcosahedronGeometry(1, comet ? 3 : 5);
+      const pos = geo.attributes.position;
+      const cols = new Float32Array(pos.count * 3);
+      const pal = PALETTES[palName];
+      const amp = comet ? 0.34 : 0.075;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        const l = Math.hypot(x, y, z);
+        x /= l; y /= l; z /= l;
+        let n = fbm3(x * 1.75 + seed, y * 1.75 + seed * 0.7, z * 1.75 - seed, 5);
+        n = (n - 0.5) * 1.9 + 0.5;
+        const cr = 1 - Math.abs(fbm3(x * 4.1 - seed, y * 4.1, z * 4.1 + seed, 3) * 2 - 1);
+        const e = clamp(n - (comet ? 0 : 0.06 * Math.pow(cr, 6)), 0, 1);
+        let hgt = e;
+        if (palName === 'terra' && e < 0.5) hgt = 0.5;
+        let rr = R * (1 + (hgt - 0.5) * amp * 2);
+        if (comet) rr *= 1 + 0.36 * x * x;
+        pos.setXYZ(i, x * rr, y * rr, z * rr);
+        const c = samplePalette(pal, e + (rand() - 0.5) * 0.03);
+        cols[i * 3] = c[0]; cols[i * 3 + 1] = c[1]; cols[i * 3 + 2] = c[2];
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    function makeStarGeometry(R, seed) {
+      const geo = new THREE.IcosahedronGeometry(R, 4);
+      const pos = geo.attributes.position;
+      const cols = new Float32Array(pos.count * 3);
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i) / R, y = pos.getY(i) / R, z = pos.getZ(i) / R;
+        const g = 0.75 + 0.5 * fbm3(x * 6 + seed, y * 6, z * 6 - seed, 4);
+        cols[i * 3] = g; cols[i * 3 + 1] = g; cols[i * 3 + 2] = g;
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      return geo;
+    }
+
+    function createBody(type, mass, pos, vel, opts = {}) {
+      const radius = bodyRadius(type, mass);
+      const seed = rand() * 100;
+      const group = new THREE.Group();
+      let mesh, mat, pal = null, starColor = null;
+
+      if (type === 'star') {
+        const hot = opts.hot !== undefined ? opts.hot : rand() < 0.5;
+        starColor = hot ? [2.1, 2.7, 4.4] : [4.0, 2.8, 1.5];
+        mat = new THREE.MeshBasicMaterial({
+          vertexColors: true,
+          color: new THREE.Color(starColor[0], starColor[1], starColor[2])
+        });
+        mesh = new THREE.Mesh(makeStarGeometry(radius, seed), mat);
+        group.add(mesh);
+
+        // Stellar Corona Shell
+        const coronaMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(radius * 1.18, 28, 20),
+          createFresnelRimMaterial(hot ? 0x60a5fa : 0xff8a3d, 2.3, 1.6)
+        );
+        group.add(coronaMesh);
+      } else {
+        pal = type === 'comet' ? 'ice' : ['terra', 'mars', 'lava'][Math.floor(rand() * 3)];
+        mat = new THREE.MeshStandardMaterial({
+          vertexColors: true,
+          roughness: 0.88,
+          metalness: 0.05,
+          flatShading: true,
+          emissive: new THREE.Color(0, 0, 0)
+        });
+        mesh = new THREE.Mesh(makeRockGeometry(radius, pal, seed, type === 'comet'), mat);
+        group.add(mesh);
+
+        if (type === 'rocky') {
+          // Rayleigh Atmosphere Rim + Planetary Ring System
+          const atmoMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(radius * 1.06, 32, 24),
+            createFresnelRimMaterial(pal === 'terra' ? 0x38bdf8 : 0xfb923c, 2.8, 1.2)
+          );
+          group.add(atmoMesh);
+
+          const ringGeo = new THREE.RingGeometry(radius * 1.38, radius * 1.92, 48);
+          ringGeo.rotateX(Math.PI * 0.42);
+          const ringMat = new THREE.MeshStandardMaterial({
+            color: pal === 'terra' ? 0xcbd5e1 : 0xfdba74,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.65,
+            roughness: 0.6
+          });
+          group.add(new THREE.Mesh(ringGeo, ringMat));
+        } else if (type === 'comet') {
+          // Glowing Cyan Coma Shell
+          const comaMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(radius * 1.32, 24, 18),
+            createFresnelRimMaterial(0x38bdf8, 2.2, 1.35)
+          );
+          group.add(comaMesh);
+        }
+      }
+
+      group.position.copy(pos);
+      scene.add(group);
+      const label = type === 'rocky' ? 'Planet' : type === 'comet' ? 'Comet' : 'Star';
+      const b = {
+        id: ++bodyCounter,
+        name: `${label}-${GREEK[(bodyCounter - 1) % GREEK.length]}`,
+        type, mass, radius,
+        pos: pos.clone(),
+        vel: vel.clone(),
+        group, mesh, mat, pal, starColor,
+        spinAxis: new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize(),
+        spinRate: 0.002 + rand() * 0.01,
+        stretch: 1,
+        partner: null,
+        sep0: 0,
+        hillsLogged: false
+      };
+      bodies.push(b);
+      return b;
+    }
+
+    function destroyBody(b) {
+      scene.remove(b.group);
+      b.mesh.geometry.dispose();
+      b.mat.dispose();
+      const i = bodies.indexOf(b);
+      if (i >= 0) bodies.splice(i, 1);
+      if (b.partner) {
+        b.partner.partner = null;
+        b.partner = null;
+      }
+    }
+
+    /* =========================================================================
+       6. TIDAL FRACTURE (SPAGHETTIFICATION) & RELATIVISTIC N-BODY INTEGRATOR
+       ========================================================================= */
+    let flare = 0, flarePhi = 0, accreted = 0, accRateSmooth = 0, accWindow = 0, simTime = 0;
+    const logList = $('event-log-list');
+
+    function simHours() {
+      return simTime * 4.925e-6 * MSUN_PER_M * P.M / 3600;
+    }
+
+    function logEvent(html, cls = '') {
+      if (!logList) return;
+      const d = document.createElement('div');
+      d.className = 'log-entry ' + cls;
+      d.innerHTML = `[t∞ ${simHours().toFixed(2)}h] ${html}`;
+      logList.prepend(d);
+      while (logList.children.length > 6) logList.removeChild(logList.lastChild);
+    }
+
+    function fractureBody(b, silent = false) {
+      let N;
+      if (b.type === 'rocky') N = Math.round(clamp(680 * Math.pow(b.mass / BASE_MASS.rocky, 0.35), 560, 1050));
+      else if (b.type === 'comet') N = Math.round(clamp(560 * Math.pow(b.mass / BASE_MASS.comet, 0.3), 520, 820));
+      else N = Math.round(clamp(720 * Math.pow(b.mass / BASE_MASS.star, 0.3), 580, 1080));
+
+      while (S.n + N > MAX_SHARDS && S.n > 0) removeShard(Math.floor(rand() * S.n));
+
+      const R = b.radius;
+      const rhat = _v1.copy(b.pos).normalize();
+      const omega = _v2.copy(b.spinAxis).multiplyScalar(b.spinRate);
+      const radii = new Float32Array(N);
+      let vsum = 0;
+      const rAvg = R * Math.cbrt(0.36 / N);
+      for (let k = 0; k < N; k++) {
+        radii[k] = rAvg * (0.55 + Math.pow(rand(), 2) * 1.4);
+        vsum += radii[k] ** 3;
+      }
+      const pal = b.pal ? PALETTES[b.pal] : PALETTES.terra;
+
+      for (let k = 0; k < N; k++) {
+        let dx, dy, dz, l2;
+        do {
+          dx = rand() * 2 - 1; dy = rand() * 2 - 1; dz = rand() * 2 - 1;
+          l2 = dx * dx + dy * dy + dz * dz;
+        } while (l2 > 1 || l2 < 1e-6);
+        const f = Math.sqrt(l2);
+
+        const along = dx * rhat.x + dy * rhat.y + dz * rhat.z;
+        const s = b.stretch, sq = 1 / Math.sqrt(s);
+        let ox = (dx - along * rhat.x) * sq + along * rhat.x * s;
+        let oy = (dy - along * rhat.y) * sq + along * rhat.y * s;
+        let oz = (dz - along * rhat.z) * sq + along * rhat.z * s;
+        ox *= R * 0.95; oy *= R * 0.95; oz *= R * 0.95;
+
+        const svx = omega.y * oz - omega.z * oy;
+        const svy = omega.z * ox - omega.x * oz;
+        const svz = omega.x * oy - omega.y * ox;
+        const ex = 0.0036 * f;
+        const vx = b.vel.x + svx + (ox / R) * ex + (rand() - 0.5) * 0.002;
+        const vy = b.vel.y + svy + (oy / R) * ex + (rand() - 0.5) * 0.002;
+        const vz = b.vel.z + svz + (oz / R) * ex + (rand() - 0.5) * 0.002;
+        const m = b.mass * (radii[k] ** 3) / vsum;
+
+        let mat, heat, c;
+        if (b.type === 'star') {
+          mat = 4;
+          heat = 2.4 + rand() * 1.3;
+          c = [b.starColor[0] / 4.4, b.starColor[1] / 4.4, b.starColor[2] / 4.4];
+        } else if (b.type === 'comet') {
+          mat = 3;
+          heat = 0.08 + rand() * 0.12;
+          c = samplePalette(pal, 0.45 + rand() * 0.55);
+        } else if (f < 0.32) {
+          mat = 2; // White-hot iron-nickel core
+          heat = 1.15 + rand() * 0.45;
+          c = [0.60, 0.48, 0.36];
+        } else if (f < 0.72) {
+          mat = 1; // Molten silicate mantle
+          heat = 0.62 + rand() * 0.35;
+          c = [0.45, 0.18, 0.08];
+        } else {
+          mat = 0; // Fractured tectonic crust
+          heat = 0.15 + rand() * 0.22;
+          c = samplePalette(pal, 0.3 + rand() * 0.6);
+        }
+        addShard(b.pos.x + ox, b.pos.y + oy, b.pos.z + oz, vx, vy, vz, radii[k], m, heat, mat, c[0], c[1], c[2]);
+      }
+
+      if (!silent) {
+        const burst = b.type === 'star' ? 240 : 180;
+        for (let k = 0; k < burst; k++) {
+          const th = rand() * 6.283, ph = Math.acos(2 * rand() - 1), sp = 0.004 + rand() * 0.018;
+          const dx = Math.sin(ph) * Math.cos(th), dy = Math.cos(ph), dz = Math.sin(ph) * Math.sin(th);
+          const hot = b.type === 'comet' ? [0.55, 0.85, 1.3] : b.type === 'star' ? [1.8, 1.55, 1.2] : [1.8, 0.72, 0.22];
+          spawnDust(
+            b.pos.x + dx * R, b.pos.y + dy * R, b.pos.z + dz * R,
+            b.vel.x + dx * sp, b.vel.y + dy * sp, b.vel.z + dz * sp,
+            hot[0], hot[1], hot[2], 0.07 + rand() * 0.08, 1.3 + rand() * 2.1, 1.0
+          );
+        }
+        flare = Math.min(1.25, flare + 0.22);
+        audioEngine.triggerDisruptionBurst();
+        const rr = b.pos.length();
+        logEvent(`<b>TIDAL DISRUPTION</b> ${b.name} → ${N} shards at r = ${(rr / D.Rs).toFixed(2)} R<sub>s</sub>`, 'tde');
+      }
+      destroyBody(b);
+    }
+
+    const _acc = new Float64Array(3);
+    function gravAccel(x, y, z, vx, vy, vz, out) {
+      const r2 = x * x + y * y + z * z;
+      const r = Math.sqrt(r2);
+      const ir3 = 1 / (r2 * r);
+      const hx = y * vz - z * vy, hy = z * vx - x * vz, hz = x * vy - y * vx;
+      const h2 = hx * hx + hy * hy + hz * hz;
+      const f = -gM * ir3 * (1 + 3 * h2 / r2);
+      let ax = f * x, ay = f * y, az = f * z;
+      if (gJ !== 0) {
+        const jr = gJ * y / r;
+        const Jx = -3 * jr * x / r, Jy = gJ - 3 * jr * y / r, Jz = -3 * jr * z / r;
+        const k = 2 * ir3;
+        ax += k * (vy * Jz - vz * Jy);
+        ay += k * (vz * Jx - vx * Jz);
+        az += k * (vx * Jy - vy * Jx);
+      }
+      out[0] = ax; out[1] = ay; out[2] = az;
+    }
+
+    function accreteShard(i) {
+      const m = S.mass[i], x = S.px[i], y = S.py[i], z = S.pz[i];
+      accreted += m;
+      accWindow += m;
+      flare = Math.min(1.25, flare + m * (S.mat[i] === 4 ? 75 : 220));
+      if (rand() < 0.35) flarePhi = Math.atan2(z, x);
+      if (rand() < 0.08) audioEngine.triggerSynchrotronChirp();
+
+      const r = Math.hypot(x, z) || 1;
+      for (let k = 0; k < 3; k++) {
+        const jet = rand() < 0.5;
+        const sgn = rand() < 0.5 ? 1 : -1;
+        const vx = jet ? (rand() - 0.5) * 0.02 : (z / r) * 0.35;
+        const vz = jet ? (rand() - 0.5) * 0.02 : (-x / r) * 0.35;
+        const vy = jet ? sgn * (0.25 + rand() * 0.2) : (rand() - 0.5) * 0.05;
+        spawnDust(x, y, z, vx, vy, vz, 0.75, 1.15, 2.4, 0.085, 0.8 + rand() * 0.8, 0.15);
+      }
+      removeShard(i);
+    }
+
+    // 32,768-Bucket 3D Spatial Hash for Shard Self-Gravity & Inelastic Collisions
+    const HASH_SIZE = 32768, CELL = 0.42;
+    const cellStart = new Int32Array(HASH_SIZE + 1), cellFill = new Int32Array(HASH_SIZE);
+    const cellIdx = new Int32Array(MAX_SHARDS), shardCell = new Int32Array(MAX_SHARDS);
+
+    function hashCell(ix, iy, iz) {
+      return (Math.imul(ix, 73856093) ^ Math.imul(iy, 19349663) ^ Math.imul(iz, 83492791)) & (HASH_SIZE - 1);
+    }
+
+    function interactShards(dt) {
+      const n = S.n;
+      cellStart.fill(0);
+      for (let i = 0; i < n; i++) {
+        const h = hashCell(Math.floor(S.px[i] / CELL), Math.floor(S.py[i] / CELL), Math.floor(S.pz[i] / CELL));
+        shardCell[i] = h;
+        cellStart[h + 1]++;
+      }
+      for (let h = 0; h < HASH_SIZE; h++) {
+        cellStart[h + 1] += cellStart[h];
+        cellFill[h] = cellStart[h];
+      }
+      for (let i = 0; i < n; i++) cellIdx[cellFill[shardCell[i]]++] = i;
+
+      const eps2 = 0.06 * 0.06, cut2 = (CELL * 1.5) ** 2, e = 0.3;
+      for (let i = 0; i < n; i++) {
+        const xi = S.px[i], yi = S.py[i], zi = S.pz[i];
+        const ix = Math.floor(xi / CELL), iy = Math.floor(yi / CELL), iz = Math.floor(zi / CELL);
+        const mi = S.mass[i], ri = S.rad[i];
+        for (let ox = -1; ox <= 1; ox++) {
+          for (let oy = -1; oy <= 1; oy++) {
+            for (let oz = -1; oz <= 1; oz++) {
+              const h = hashCell(ix + ox, iy + oy, iz + oz);
+              for (let k = cellStart[h], ke = cellStart[h + 1]; k < ke; k++) {
+                const j = cellIdx[k];
+                if (j <= i) continue;
+                const dx = S.px[j] - xi, dy = S.py[j] - yi, dz = S.pz[j] - zi;
+                const d2 = dx * dx + dy * dy + dz * dz;
+                if (d2 > cut2) continue;
+                const mj = S.mass[j];
+
+                // Softened mutual gravity
+                const s2 = d2 + eps2;
+                const f = dt / (s2 * Math.sqrt(s2));
+                S.vx[i] += mj * f * dx; S.vy[i] += mj * f * dy; S.vz[i] += mj * f * dz;
+                S.vx[j] -= mi * f * dx; S.vy[j] -= mi * f * dy; S.vz[j] -= mi * f * dz;
+
+                // Inelastic collision & shock heating
+                const rs = ri + S.rad[j];
+                if (d2 < rs * rs && d2 > 1e-12) {
+                  const d = Math.sqrt(d2);
+                  const nx = dx / d, ny = dy / d, nz = dz / d;
+                  const vn = (S.vx[j] - S.vx[i]) * nx + (S.vy[j] - S.vy[i]) * ny + (S.vz[j] - S.vz[i]) * nz;
+                  const inv = 1 / mi + 1 / mj;
+                  if (vn < 0) {
+                    const J = -(1 + e) * vn / inv;
+                    S.vx[i] -= (J / mi) * nx; S.vy[i] -= (J / mi) * ny; S.vz[i] -= (J / mi) * nz;
+                    S.vx[j] += (J / mj) * nx; S.vy[j] += (J / mj) * ny; S.vz[j] += (J / mj) * nz;
+                    const dh = -vn * 6.0;
+                    S.heat[i] += dh;
+                    S.heat[j] += dh;
+                    if (-vn > 0.015 && rand() < 0.25) {
+                      spawnDust(
+                        xi + dx * 0.5, yi + dy * 0.5, zi + dz * 0.5,
+                        (S.vx[i] + S.vx[j]) * 0.5 + (rand() - 0.5) * 0.02,
+                        (S.vy[i] + S.vy[j]) * 0.5 + (rand() - 0.5) * 0.02,
+                        (S.vz[i] + S.vz[j]) * 0.5 + (rand() - 0.5) * 0.02,
+                        2.4, 1.3, 0.45, 0.06, 0.5 + rand() * 0.6, 1.0
+                      );
+                    }
+                  }
+                  const corr = ((rs - d) * 0.5) / inv;
+                  S.px[i] -= (nx * corr) / mi; S.py[i] -= (ny * corr) / mi; S.pz[i] -= (nz * corr) / mi;
+                  S.px[j] += (nx * corr) / mj; S.py[j] += (ny * corr) / mj; S.pz[j] += (nz * corr) / mj;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const bAx = new Float64Array(64), bAy = new Float64Array(64), bAz = new Float64Array(64), bAm = new Float64Array(64), bAe = new Float64Array(64);
+    function stepShards(dt) {
+      if (!S.n) return;
+      interactShards(dt);
+      const M = gM, sqM = Math.sqrt(M), dIn = D.diskIn, dOut = D.diskOut, killR = D.killR;
+      const nb = Math.min(bodies.length, 64);
+      for (let k = 0; k < nb; k++) {
+        const b = bodies[k];
+        bAx[k] = b.pos.x; bAy[k] = b.pos.y; bAz[k] = b.pos.z;
+        bAm[k] = b.mass; bAe[k] = (b.radius * 1.2) ** 2;
+      }
+
+      for (let i = 0; i < S.n; i++) {
+        let x = S.px[i], y = S.py[i], z = S.pz[i], vx = S.vx[i], vy = S.vy[i], vz = S.vz[i];
+        let heat = S.heat[i];
+        let r = Math.sqrt(x * x + y * y + z * z);
+        let nsub = Math.ceil(dt / (0.035 * r * Math.sqrt(r) / sqM));
+        if (nsub < 1) nsub = 1; else if (nsub > 48) nsub = 48;
+        const h = dt / nsub;
+
+        for (let s = 0; s < nsub; s++) {
+          gravAccel(x, y, z, vx, vy, vz, _acc);
+          let ax = _acc[0], ay = _acc[1], az = _acc[2];
+          for (let k = 0; k < nb; k++) {
+            const dx = bAx[k] - x, dy = bAy[k] - y, dz = bAz[k] - z;
+            const d2 = dx * dx + dy * dy + dz * dz + bAe[k];
+            const f = bAm[k] / (d2 * Math.sqrt(d2));
+            ax += f * dx; ay += f * dy; az += f * dz;
+          }
+          const rc = Math.sqrt(x * x + z * z);
+          if (rc > dIn * 0.75 && rc < dOut * 1.15) {
+            const H = 0.1 * rc + 0.15;
+            if (Math.abs(y) < 3 * H) {
+              const vc = Math.sqrt(M / Math.max(rc - 2.6 * M, 1.5 * M));
+              const inflow = -(0.0008 + 0.006 * Math.max(0, (dIn * 1.4 - rc) / dIn));
+              const tx = (vc * z) / rc + (inflow * x) / rc;
+              const ty = -0.02 * y;
+              const tz = (-vc * x) / rc + (inflow * z) / rc;
+              const w = Math.exp(-(y * y) / (H * H)) * 0.008 * h * (rc < dIn ? 0.4 : 1);
+              const dvx = (tx - vx) * w, dvy = (ty - vy) * w, dvz = (tz - vz) * w;
+              vx += dvx; vy += dvy; vz += dvz;
+              heat += Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz) * 28;
+            }
+          }
+          vx += ax * h; vy += ay * h; vz += az * h;
+          x += vx * h; y += vy * h; z += vz * h;
+        }
+        r = Math.sqrt(x * x + y * y + z * z);
+        S.px[i] = x; S.py[i] = y; S.pz[i] = z;
+        S.vx[i] = vx; S.vy[i] = vy; S.vz[i] = vz;
+
+        if (r < killR) { accreteShard(i); i--; continue; }
+        if (r > 450) { removeShard(i); i--; continue; }
+
+        const mat = S.mat[i];
+        heat += ((mat === 4 ? 0.2 : 0.6) * M) / (r * r * r) * dt;
+        heat -= heat * 0.0035 * dt;
+        if (mat === 4 && heat < 1.55) heat = 1.55;
+        if (heat > HEAT_MAX) heat = HEAT_MAX;
+
+        if (mat === 3 && heat > 0.3) {
+          S.rad[i] *= 1 - 0.0006 * dt * heat;
+          if (rand() < 0.04 * heat) {
+            spawnDust(x, y, z, vx + (x / r) * 0.01, vy + (y / r) * 0.01, vz + (z / r) * 0.01, 0.45, 0.72, 1.15, 0.1, 1.5 + rand(), 0.25);
+          }
+          if (S.rad[i] < 0.012) { removeShard(i); i--; continue; }
+        }
+        S.heat[i] = heat;
+        S.ang[i] += S.angRate[i] * dt;
+        S.age[i] += dt;
+      }
+    }
+
+    const accB = [];
+    function stepBodies(dt) {
+      const nb = bodies.length;
+      if (!nb) return;
+      const sqM = Math.sqrt(gM);
+      let hmax = 4;
+      for (let i = 0; i < nb; i++) {
+        const r = bodies[i].pos.length();
+        hmax = Math.min(hmax, (0.02 * r * Math.sqrt(r)) / sqM);
+        for (let j = i + 1; j < nb; j++) {
+          const sep = bodies[i].pos.distanceTo(bodies[j].pos);
+          const mt = bodies[i].mass + bodies[j].mass;
+          if (sep < 12) hmax = Math.min(hmax, (0.03 * sep * Math.sqrt(sep)) / Math.sqrt(mt));
+        }
+      }
+      const nsub = clamp(Math.ceil(dt / hmax), 1, 400);
+      const h = dt / nsub;
+      while (accB.length < nb) accB.push(new Float64Array(3));
+
+      for (let s = 0; s < nsub; s++) {
+        for (let i = 0; i < nb; i++) {
+          const b = bodies[i];
+          gravAccel(b.pos.x, b.pos.y, b.pos.z, b.vel.x, b.vel.y, b.vel.z, accB[i]);
+        }
+        for (let i = 0; i < nb; i++) {
+          for (let j = i + 1; j < nb; j++) {
+            const a = bodies[i], b = bodies[j];
+            const dx = b.pos.x - a.pos.x, dy = b.pos.y - a.pos.y, dz = b.pos.z - a.pos.z;
+            const eps = (a.radius + b.radius) * 0.5;
+            const d2 = dx * dx + dy * dy + dz * dz + eps * eps;
+            const f = 1 / (d2 * Math.sqrt(d2));
+            accB[i][0] += b.mass * f * dx; accB[i][1] += b.mass * f * dy; accB[i][2] += b.mass * f * dz;
+            accB[j][0] -= a.mass * f * dx; accB[j][1] -= a.mass * f * dy; accB[j][2] -= a.mass * f * dz;
+          }
+        }
+        for (let i = 0; i < nb; i++) {
+          const b = bodies[i];
+          b.vel.x += accB[i][0] * h; b.vel.y += accB[i][1] * h; b.vel.z += accB[i][2] * h;
+          b.pos.x += b.vel.x * h; b.pos.y += b.vel.y * h; b.pos.z += b.vel.z * h;
+        }
+      }
+
+      for (let i = bodies.length - 1; i >= 0; i--) {
+        const b = bodies[i];
+        const r = b.pos.length();
+        if (b.partner && !b.hillsLogged && b.id < b.partner.id) {
+          const sep = b.pos.distanceTo(b.partner.pos);
+          if (sep > b.sep0 * 4) {
+            b.hillsLogged = b.partner.hillsLogged = true;
+            logEvent(`<b>HILLS MECHANISM</b> binary ${b.name}/${b.partner.name} split (capture + hypervelocity ejection)`, 'hills');
+          }
+        }
+        if (r < D.rH + b.radius * 0.5) {
+          flare = Math.min(1.25, flare + b.mass * 85);
+          flarePhi = Math.atan2(b.pos.z, b.pos.x);
+          accreted += b.mass;
+          accWindow += b.mass;
+          logEvent(`<b>HORIZON CAPTURE</b> ${b.name} crossed r<sub>+</sub> intact`, 'flare');
+          destroyBody(b);
+          continue;
+        }
+        if (r < rocheRadius(b.type)) {
+          fractureBody(b);
+          continue;
+        }
+        if (r > 600) {
+          logEvent(`<b>HYPERVELOCITY ESCAPE</b> ${b.name} exited gravitational well`, '');
+          destroyBody(b);
+          continue;
+        }
+        if (b.type === 'comet' && r < 45) {
+          const cnt = Math.min(10, Math.floor((260 / (r * r)) * 60 * (dt / TIME_UNIT) + rand()));
+          for (let k = 0; k < cnt; k++) {
+            const R = b.radius;
+            spawnDust(
+              b.pos.x + (rand() - 0.5) * R, b.pos.y + (rand() - 0.5) * R, b.pos.z + (rand() - 0.5) * R,
+              b.vel.x + (b.pos.x / r) * 0.02 + (rand() - 0.5) * 0.008,
+              b.vel.y + (b.pos.y / r) * 0.02 + (rand() - 0.5) * 0.008,
+              b.vel.z + (b.pos.z / r) * 0.02 + (rand() - 0.5) * 0.008,
+              0.45, 0.78, 1.25, 0.12, 2.0 + rand() * 1.5, 0.2
+            );
+          }
+        }
+      }
+    }
+
+    function updateBodyVisuals(dtSim) {
+      for (const b of bodies) {
+        const r = b.pos.length();
+        const roche = rocheRadius(b.type);
+        const q = roche / r;
+        b.stretch = 1 + Math.min(0.75, 0.55 * q * q * q);
+        b.group.position.copy(b.pos);
+        _v3.copy(b.pos).normalize();
+        b.group.quaternion.setFromUnitVectors(AXIS_X, _v3);
+        const sq = 1 / Math.sqrt(b.stretch);
+        b.group.scale.set(b.stretch, sq, sq);
+        b.mesh.rotateOnAxis(b.spinAxis, b.spinRate * dtSim);
+        if (b.type !== 'star') {
+          const glow = clamp(Math.pow(q * 1.25, 3) - 0.6, 0, 2.2) * 0.7 + (b.pal === 'lava' ? 0.14 : 0);
+          if (b.type === 'comet') b.mat.emissive.setRGB(0.25 * glow, 0.45 * glow, 0.8 * glow);
+          else b.mat.emissive.setRGB(1.0 * glow, 0.32 * glow, 0.08 * glow);
+        }
+      }
+    }
+
+    /* =========================================================================
+       7. LAUNCHER, PRESETS, PREDICTIVE TRAJECTORY & 3D POINTER INTERACTION
+       ========================================================================= */
+    function launch(type, pos, vel) {
+      if (type === 'binary') {
+        const m = projMass('binary');
+        const vdir = vel.lengthSq() > 1e-10 ? _v1.copy(vel).normalize() : _v1.copy(pos).normalize().negate();
+        const rnd = new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize();
+        const nrm = new THREE.Vector3().crossVectors(vdir, rnd).normalize();
+        const off = new THREE.Vector3().crossVectors(nrm, vdir).normalize().multiplyScalar(BINARY_SEP / 2);
+        const vOrb = Math.sqrt(m / (2 * BINARY_SEP));
+        const odir = new THREE.Vector3().crossVectors(nrm, off).normalize().multiplyScalar(vOrb);
+        const a = createBody('star', m, pos.clone().add(off), vel.clone().add(odir), { hot: true });
+        const b = createBody('star', m, pos.clone().sub(off), vel.clone().sub(odir), { hot: false });
+        a.partner = b; b.partner = a; a.sep0 = b.sep0 = BINARY_SEP;
+        logEvent(`<b>LAUNCH</b> binary ${a.name} + ${b.name} · v = ${vel.length().toFixed(3)} c`, 'hills');
+      } else {
+        const b = createBody(type, projMass(type), pos, vel);
+        logEvent(`<b>LAUNCH</b> ${b.name} (${type}) · v = ${vel.length().toFixed(3)} c`, '');
+      }
+    }
+
+    function aimedVelocity(pos, tdir, rp, speedFactor = 1.0) {
+      const r0 = pos.length();
+      const v = Math.sqrt((2 * P.M) / r0) * speedFactor;
+      const E = 0.5 * v * v - P.M / r0;
+      const L = rp * Math.sqrt(Math.max(0, 2 * (E + P.M / rp)));
+      const sinA = clamp(L / (r0 * v), 0, 1), cosA = Math.sqrt(1 - sinA * sinA);
+      const rh = pos.clone().normalize();
+      return rh.multiplyScalar(-cosA * v).add(tdir.clone().multiplyScalar(sinA * v));
+    }
+
+    function autoLaunch(type) {
+      type = type || P.projType;
+      const r0 = D.diskOut + 13;
+      const th = rand() * Math.PI * 2, inc = (rand() - 0.5) * 0.65;
+      const pos = new THREE.Vector3(Math.cos(th) * Math.cos(inc), Math.sin(inc), Math.sin(th) * Math.cos(inc)).multiplyScalar(r0);
+      const axis = new THREE.Vector3((rand() - 0.5) * 0.4, 1, (rand() - 0.5) * 0.4).normalize();
+      const t = new THREE.Vector3().crossVectors(axis, pos).normalize();
+      let rp;
+      if (type === 'binary') rp = hillsRadius(projMass('binary')) * (0.48 + rand() * 0.22);
+      else rp = Math.max(rocheRadius(type) * (0.55 + rand() * 0.35), 7.2 * P.M);
+      launch(type, pos, aimedVelocity(pos, t, rp, 0.94));
+    }
+
+    function injectGrazingTDE() {
+      const r0 = D.diskOut + 10;
+      const pos = new THREE.Vector3(-r0 * 0.85, 1.2, r0 * 0.52);
+      const t = new THREE.Vector3(0.52, -0.05, 0.85).normalize();
+      const rp = Math.max(rocheRadius('rocky') * 0.85, 7.8 * P.M);
+      launch('rocky', pos, aimedVelocity(pos, t, rp, 0.96));
+    }
+
+    function injectCometRosette() {
+      const r0 = D.diskOut + 12;
+      const pos = new THREE.Vector3(r0 * 0.78, 3.2, -r0 * 0.62);
+      const t = new THREE.Vector3(0.62, -0.12, 0.78).normalize();
+      const rp = rocheRadius('comet') * 0.86;
+      launch('comet', pos, aimedVelocity(pos, t, rp, 0.92));
+    }
+
+    function injectBinaryHills() {
+      const r0 = D.diskOut + 14;
+      const pos = new THREE.Vector3(-r0 * 0.72, -1.8, -r0 * 0.68);
+      const t = new THREE.Vector3(0.68, 0.08, -0.72).normalize();
+      const rp = hillsRadius(projMass('binary')) * 0.56;
+      launch('binary', pos, aimedVelocity(pos, t, rp, 0.96));
+    }
+
+    function predictTrajectory(sx, sy, sz, vx0, vy0, vz0, guide) {
+      const sqM = Math.sqrt(P.M);
+      let x = sx, y = sy, z = sz, vx = vx0, vy = vy0, vz = vz0;
+      const pos = trajGeo.attributes.position.array, col = trajGeo.attributes.color.array;
+      let cnt = 0, minR = 1e9, t = 0, outcome = 'escape', crossed = false;
+      let lx = x, ly = y, lz = z;
+      const push = (r) => {
+        if (cnt >= PRED_MAX) return;
+        pos[cnt * 3] = x; pos[cnt * 3 + 1] = y; pos[cnt * 3 + 2] = z;
+        let c;
+        if (crossed) c = [0.65, 0.14, 0.10];
+        else if (r > guide * 1.5) c = [0.22, 0.78, 0.98];
+        else if (r > guide) {
+          const k = (guide * 1.5 - r) / (guide * 0.5);
+          c = [0.22 + 0.78 * k, 0.78 - 0.12 * k, 0.98 - 0.82 * k];
+        } else c = [0.98, 0.25, 0.18];
+        col[cnt * 3] = c[0]; col[cnt * 3 + 1] = c[1]; col[cnt * 3 + 2] = c[2];
+        cnt++;
+      };
+      push(Math.hypot(x, y, z));
+      for (let it = 0; it < 18000 && t < 4800; it++) {
+        const r = Math.sqrt(x * x + y * y + z * z);
+        if (r < D.killR) { outcome = 'capture'; break; }
+        if (r > 350) { outcome = 'escape'; break; }
+        if (r < minR) minR = r;
+        if (r < guide && !crossed) { push(r); crossed = true; }
+        const h = Math.min(3, (0.015 * r * Math.sqrt(r)) / sqM);
+        gravAccel(x, y, z, vx, vy, vz, _acc);
+        vx += _acc[0] * h; vy += _acc[1] * h; vz += _acc[2] * h;
+        x += vx * h; y += vy * h; z += vz * h;
+        t += h;
+        const dx = x - lx, dy = y - ly, dz = z - lz;
+        if (dx * dx + dy * dy + dz * dz > 0.25) {
+          push(r); lx = x; ly = y; lz = z;
+        }
+      }
+      if (outcome === 'escape' && t >= 4800) outcome = 'bound';
+      trajGeo.setDrawRange(0, cnt);
+      trajGeo.attributes.position.needsUpdate = true;
+      trajGeo.attributes.color.needsUpdate = true;
+      return { minR, outcome, disrupt: minR < guide };
+    }
+
+    // 3D Slingshot Pointer & Cursor Spacetime Probe
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    const aimPlane = new THREE.Plane();
+    const aimStart = new THREE.Vector3(), aimEnd = new THREE.Vector3(), aimVel = new THREE.Vector3();
+    let aiming = false, aimPointerId = null, lastPrediction = null, cursorInside = false;
+    const cursorPx = { x: 0, y: 0 };
+
+    function currentPlane(out) {
+      if (P.plane === 'disk') return out.set(new THREE.Vector3(0, 1, 0), 0);
+      const n = camera.getWorldDirection(new THREE.Vector3()).negate();
+      return out.setFromNormalAndCoplanarPoint(n, new THREE.Vector3());
+    }
+
+    function setNdc(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    }
+
+    function rayToPlane(e, plane, out) {
+      setNdc(e);
+      raycaster.setFromCamera(ndc, camera);
+      return raycaster.ray.intersectPlane(plane, out);
+    }
+
+    function computeAimVelocity() {
+      const drag = _v1.subVectors(aimEnd, aimStart);
+      if (drag.length() < 0.35) {
+        const rh = aimStart.clone().normalize();
+        const t = new THREE.Vector3().crossVectors(aimPlane.normal, rh).normalize();
+        const g = guideRadius(P.projType);
+        const rp = P.projType === 'binary' ? g * 0.6 : Math.max(rocheRadius(P.projType) * 0.7, 7.5 * P.M);
+        aimVel.copy(aimedVelocity(aimStart, t, rp, 0.97));
+        return true;
+      }
+      aimVel.copy(drag).multiplyScalar(0.012 * P.velMult);
+      if (aimVel.length() > 0.6) aimVel.setLength(0.6);
+      return false;
+    }
+
+    function refreshAim() {
+      const auto = computeAimVelocity();
+      const len = aimVel.length();
+      arrow.position.copy(aimStart);
+      if (len > 1e-6) {
+        arrow.setDirection(_v2.copy(aimVel).normalize());
+        const L = Math.max(1.2, len / (0.012 * P.velMult));
+        arrow.setLength(L, Math.min(1.2, L * 0.3), Math.min(0.6, L * 0.15));
+      }
+      arrow.setColor(auto ? 0xf59e0b : 0x38bdf8);
+      arrow.visible = true;
+      ghost.position.copy(aimStart);
+      ghost.scale.setScalar(bodyRadius(P.projType, projMass(P.projType)) * (P.projType === 'binary' ? 1.8 : 1));
+      ghost.visible = true;
+
+      const g = guideRadius(P.projType);
+      lastPrediction = predictTrajectory(aimStart.x, aimStart.y, aimStart.z, aimVel.x, aimVel.y, aimVel.z, g);
+      trajLine.visible = true;
+
+      const pr = lastPrediction;
+      const verdict = pr.outcome === 'capture' && !pr.disrupt
+        ? '<span style="color:#f43f5e">PLUNGE · Horizon Capture</span>'
+        : pr.disrupt
+          ? `<span style="color:#f43f5e">${P.projType === 'binary' ? 'HILLS BREAK-UP' : 'TIDAL DISRUPTION'} Predicted</span>`
+          : pr.outcome === 'escape'
+            ? '<span style="color:#38bdf8">Hyperbolic Flyby</span>'
+            : '<span style="color:#f59e0b">Relativistic Bound Orbit</span>';
+
+      const tag = $('aim-floating-tag');
+      tag.innerHTML = `${auto ? 'AUTO-AIM · ' : ''}v = ${len.toFixed(3)} c (${Math.round(len * 299792).toLocaleString()} km/s)<br>` +
+        `Periapsis ${(pr.minR / D.Rs).toFixed(2)} R<sub>s</sub> · ${verdict}`;
+      tag.style.display = 'block';
+      tag.style.left = (cursorPx.x + 18) + 'px';
+      tag.style.top = (cursorPx.y + 18) + 'px';
+    }
+
+    function endAim() {
+      aiming = false;
+      aimPointerId = null;
+      arrow.visible = false;
+      ghost.visible = false;
+      trajLine.visible = false;
+      $('aim-floating-tag').style.display = 'none';
+    }
+
+    const cvs = renderer.domElement;
+    cvs.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || P.mode !== 'launch') return;
+      currentPlane(aimPlane);
+      if (!rayToPlane(e, aimPlane, aimStart)) return;
+      const minR = Math.max(D.diskIn * 1.15, D.killR * 2.5);
+      if (aimStart.length() < minR) aimStart.setLength(minR);
+      aimEnd.copy(aimStart);
+      aiming = true;
+      aimPointerId = e.pointerId;
+      cursorPx.x = e.clientX;
+      cursorPx.y = e.clientY;
+      refreshAim();
+    });
+
+    cvs.addEventListener('pointermove', (e) => {
+      cursorPx.x = e.clientX;
+      cursorPx.y = e.clientY;
+      setNdc(e);
+      cursorInside = true;
+      if (aiming && e.pointerId === aimPointerId) {
+        if (rayToPlane(e, aimPlane, _v3)) aimEnd.copy(_v3);
+        refreshAim();
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (aiming && e.pointerId === aimPointerId) {
+        computeAimVelocity();
+        launch(P.projType, aimStart.clone(), aimVel.clone());
+        endAim();
+      }
+    });
+
+    cvs.addEventListener('pointerleave', () => { cursorInside = false; });
+
+    function cursorRadius() {
+      raycaster.setFromCamera(ndc, camera);
+      const pl = currentPlane(new THREE.Plane());
+      const hit = raycaster.ray.intersectPlane(pl, _v2);
+      if (hit) return hit.length();
+      return raycaster.ray.distanceToPoint(new THREE.Vector3());
+    }
+
+    /* =========================================================================
+       8. UI CONTROLS, PRE-WARM INITIAL TIDAL STREAM & MAIN RENDER LOOP
+       ========================================================================= */
+    function setInteractionMode(mode) {
+      P.mode = mode;
+      const isLaunch = mode === 'launch';
+      $('mode-launch').classList.toggle('active', isLaunch);
+      $('mode-orbit').classList.toggle('active', !isLaunch);
+      container.classList.toggle('orbit-mode', !isLaunch);
+      controls.mouseButtons.LEFT = isLaunch ? -1 : THREE.MOUSE.ROTATE;
+    }
+    $('mode-launch').addEventListener('click', () => setInteractionMode('launch'));
+    $('mode-orbit').addEventListener('click', () => setInteractionMode('orbit'));
+
+    const btnPlane = $('btn-plane');
+    btnPlane.addEventListener('click', () => {
+      P.plane = P.plane === 'disk' ? 'view' : 'disk';
+      btnPlane.textContent = P.plane === 'disk' ? 'Plane: Disk' : 'Plane: Camera';
+      btnPlane.classList.toggle('active', P.plane === 'view');
+    });
+
+    function selectBodyType(type) {
+      P.projType = type;
+      document.querySelectorAll('[data-body-type]').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-body-type') === type);
+      });
+      updateMassLabel();
+    }
+    document.querySelectorAll('[data-body-type]').forEach((btn) => {
+      btn.addEventListener('click', () => selectBodyType(btn.getAttribute('data-body-type')));
+    });
+
+    $('preset-tde').addEventListener('click', injectGrazingTDE);
+    $('preset-rosette').addEventListener('click', injectCometRosette);
+    $('preset-binary').addEventListener('click', injectBinaryHills);
+    $('btn-random').addEventListener('click', () => autoLaunch());
+
+    const btnPause = $('btn-pause');
+    function togglePause() {
+      P.paused = !P.paused;
+      btnPause.textContent = P.paused ? 'Resume [Space]' : 'Pause [Space]';
+      btnPause.classList.toggle('active', P.paused);
+    }
+    btnPause.addEventListener('click', togglePause);
+
+    const btnAudio = $('btn-audio');
+    btnAudio.addEventListener('click', () => {
+      const on = audioEngine.toggle();
+      btnAudio.textContent = on ? 'Audio: ON' : 'Audio: OFF';
+      btnAudio.classList.toggle('active', on);
+    });
+
+    function clearAll() {
+      while (bodies.length) destroyBody(bodies[0]);
+      S.n = 0;
+      DU.n = 0;
+      flare = 0;
+      logEvent('<b>RESET</b> cleared all bodies, shards and plasma', '');
+    }
+    $('btn-clear').addEventListener('click', clearAll);
+
+    const dockWrapper = $('bottom-dock-wrapper');
+    const btnToggleDock = $('btn-toggle-dock');
+    function toggleDock() {
+      const collapsed = dockWrapper.classList.toggle('collapsed');
+      btnToggleDock.textContent = collapsed
+        ? '▴ Show Controls [H]'
+        : '▾ Hide Controls [H] · Left-Drag: Slingshot Launch (Click = Auto-Aim) · Right-Drag: Orbit · 1/2/3: Body · R: Random · Space: Pause';
+    }
+    btnToggleDock.addEventListener('click', toggleDock);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.code === 'Space') { e.preventDefault(); togglePause(); }
+      else if (e.key === '1') selectBodyType('rocky');
+      else if (e.key === '2') selectBodyType('comet');
+      else if (e.key === '3') selectBodyType('binary');
+      else if (e.key === 'r' || e.key === 'R') autoLaunch();
+      else if (e.key === 'c' || e.key === 'C') clearAll();
+      else if (e.key === 'h' || e.key === 'H') toggleDock();
+    });
+
+    // Sliders
+    $('slider-bh-mass').addEventListener('input', (e) => {
+      P.M = parseFloat(e.target.value);
+      $('val-bh-mass').textContent = `${(P.M * MSUN_PER_M / 1e6).toFixed(2)}×10⁶ M☉`;
+      updateDerived();
+    });
+    $('slider-bh-spin').addEventListener('input', (e) => {
+      P.spin = parseFloat(e.target.value);
+      $('val-bh-spin').textContent = `+${P.spin.toFixed(3)}`;
+      updateDerived();
+    });
+    $('slider-disk-temp').addEventListener('input', (e) => {
+      P.diskTemp = parseFloat(e.target.value);
+      $('val-disk-temp').textContent = `${Math.round(P.diskTemp).toLocaleString()} K`;
+    });
+    $('slider-time-scale').addEventListener('input', (e) => {
+      P.timeScale = parseFloat(e.target.value);
+      $('val-time-scale').textContent = `${P.timeScale.toFixed(2)}×`;
+    });
+
+    function updateMassLabel() {
+      const v = P.projMass;
+      if (P.projType === 'rocky') $('val-body-mass').textContent = `${v.toFixed(2)} M⊕`;
+      else if (P.projType === 'comet') $('val-body-mass').textContent = `${(v * 2.2).toFixed(1)}×10¹⁴ kg`;
+      else $('val-body-mass').textContent = `2 × ${v.toFixed(2)} M☉`;
+    }
+    $('slider-body-mass').addEventListener('input', (e) => {
+      P.projMass = parseFloat(e.target.value);
+      updateMassLabel();
+    });
+    $('slider-launch-speed').addEventListener('input', (e) => {
+      P.velMult = parseFloat(e.target.value);
+      $('val-launch-speed').textContent = `${P.velMult.toFixed(2)}×`;
+    });
+    $('slider-bloom').addEventListener('input', (e) => {
+      P.bloom = parseFloat(e.target.value);
+      $('val-bloom').textContent = P.bloom.toFixed(2);
+    });
+
+    const btnDownloadHtml = $('btn-download-html');
+    if (btnDownloadHtml) {
+      btnDownloadHtml.addEventListener('click', async () => {
+        try {
+          const res = await fetch(window.location.href);
+          const text = await res.text();
+          const blob = new Blob([text], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'index.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (err) {}
+      });
+    }
+
+    function resize() {
+      const w = innerWidth, h = innerHeight;
+      const scale = isHeadless ? 0.72 : 0.78;
+      const pr = Math.min(devicePixelRatio || 1, 1.5) * scale;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(pr);
+      renderer.setSize(w, h);
+      composer.setPixelRatio(pr);
+      composer.setSize(w, h);
+      const bw = Math.max(1, Math.floor(w * pr)), bh = Math.max(1, Math.floor(h * pr));
+      sceneRT.setSize(bw, bh);
+      LU.uSteps.value = 220;
+      dustMat.uniforms.uScale.value = bh / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function updateShardInstances() {
+      const n = S.n, m = shardMesh.instanceMatrix.array, ic = shardMesh.instanceColor.array, M = gM;
+      for (let i = 0; i < n; i++) {
+        const x = S.px[i], y = S.py[i], z = S.pz[i];
+        const vx = S.vx[i], vy = S.vy[i], vz = S.vz[i];
+        const sp = Math.sqrt(vx * vx + vy * vy + vz * vz) || 1e-6;
+        const fx = vx / sp, fy = vy / sp, fz = vz / sp;
+        let ux = 0, uy = 1, uz = 0;
+        if (Math.abs(fy) > 0.9) { ux = 1; uy = 0; }
+        let sx = fy * uz - fz * uy, sy = fz * ux - fx * uz, sz = fx * uy - fy * ux;
+        const sl = Math.sqrt(sx * sx + sy * sy + sz * sz) || 1;
+        sx /= sl; sy /= sl; sz /= sl;
+        const tx = sy * fz - sz * fy, ty = sz * fx - sx * fz, tz = sx * fy - sy * fx;
+        const ca = Math.cos(S.ang[i]), sa = Math.sin(S.ang[i]);
+        const yx = tx * ca + sx * sa, yy = ty * ca + sy * sa, yz = tz * ca + sz * sa;
+        const zx = -tx * sa + sx * ca, zy = -ty * sa + sy * ca, zz = -tz * sa + sz * ca;
+        const r = Math.sqrt(x * x + y * y + z * z);
+
+        const st = 1 + Math.min(4.0, (70 * M) / (r * r * r)) + Math.min(1.2, sp * 1.5);
+        const rad = S.rad[i] * 1.52, a = rad * st, b = rad / Math.sqrt(st);
+        const o = i * 16;
+        m[o] = fx * a; m[o + 1] = fy * a; m[o + 2] = fz * a; m[o + 3] = 0;
+        m[o + 4] = yx * b; m[o + 5] = yy * b; m[o + 6] = yz * b; m[o + 7] = 0;
+        m[o + 8] = zx * b; m[o + 9] = zy * b; m[o + 10] = zz * b; m[o + 11] = 0;
+        m[o + 12] = x; m[o + 13] = y; m[o + 14] = z; m[o + 15] = 1;
+
+        const c3 = i * 3;
+        ic[c3] = S.cr[i]; ic[c3 + 1] = S.cg[i]; ic[c3 + 2] = S.cb[i];
+        const li = Math.min(HEAT_LUT_N - 1, ((S.heat[i] / HEAT_MAX) * (HEAT_LUT_N - 1)) | 0) * 3;
+        const k = S.mat[i] === 4 ? 0.65 : S.mat[i] === 3 ? 0.6 : 1.0;
+        shardEmit[c3] = HEAT_LUT[li] * k;
+        shardEmit[c3 + 1] = HEAT_LUT[li + 1] * k;
+        shardEmit[c3 + 2] = HEAT_LUT[li + 2] * k;
+        if (S.mat[i] === 3) {
+          shardEmit[c3] += 0.03; shardEmit[c3 + 1] += 0.06; shardEmit[c3 + 2] += 0.10;
+        }
+      }
+      shardMesh.count = n;
+      shardMesh.instanceMatrix.needsUpdate = true;
+      shardMesh.instanceColor.needsUpdate = true;
+      shardEmitAttr.needsUpdate = true;
+    }
+
+    function stepDust(realDt, dtSim) {
+      const M = gM, kill = D.rH * 1.1;
+      for (let i = 0; i < DU.n; i++) {
+        DU.life[i] -= realDt;
+        if (DU.life[i] <= 0) { removeDust(i); i--; continue; }
+        if (dtSim > 0) {
+          const sub = 2, h = dtSim / sub;
+          for (let s = 0; s < sub; s++) {
+            const x = DU.px[i], y = DU.py[i], z = DU.pz[i];
+            const r2 = x * x + y * y + z * z, r = Math.sqrt(r2);
+            const f = (-M * DU.beta[i]) / (r2 * r);
+            DU.vx[i] += f * x * h; DU.vy[i] += f * y * h; DU.vz[i] += f * z * h;
+            DU.px[i] += DU.vx[i] * h; DU.py[i] += DU.vy[i] * h; DU.pz[i] += DU.vz[i] * h;
+          }
+          const x = DU.px[i], y = DU.py[i], z = DU.pz[i];
+          if (x * x + y * y + z * z < kill * kill) { removeDust(i); i--; continue; }
+        }
+      }
+      for (let i = 0; i < DU.n; i++) {
+        const t = DU.life[i] / DU.max[i], fade = t * t * (3 - 2 * t);
+        dustPos[i * 3] = DU.px[i]; dustPos[i * 3 + 1] = DU.py[i]; dustPos[i * 3 + 2] = DU.pz[i];
+        dustCol[i * 3] = DU.r[i] * fade; dustCol[i * 3 + 1] = DU.g[i] * fade; dustCol[i * 3 + 2] = DU.b[i] * fade;
+        dustSize[i] = DU.size[i] * (0.6 + 0.4 * fade);
+      }
+      dustGeo.setDrawRange(0, DU.n);
+      dustGeo.attributes.position.needsUpdate = true;
+      dustGeo.attributes.aColor.needsUpdate = true;
+      dustGeo.attributes.aSize.needsUpdate = true;
+    }
+
+    // Pre-populate Initial Scene with an Active Lensed Spaghettification Stream + Grazing Planet + Comet
+    function initDefaultScene() {
+      logEvent('<b>ONLINE</b> Kerr spacetime metric initialised (a/M = +0.680)', 'flare');
+
+      // 1. Spawn a rocky world right inside the Roche limit on a GR prograde grazing arc so 714 glowing molten shards wrap around the front-left of the black hole on Frame 1!
+      const seedPos = new THREE.Vector3(-4.2, 0.42, 7.2);
+      const r0 = seedPos.length();
+      const vCircGR = Math.sqrt(P.M / Math.max(r0 - 2.8 * P.M, 2.0));
+      const seedTan = new THREE.Vector3(-7.2 / r0, -0.04, -4.2 / r0).normalize();
+      const seedVel = seedTan.multiplyScalar(vCircGR * 0.96);
+      const seedBody = createBody('rocky', BASE_MASS.rocky * 1.15, seedPos, seedVel);
+      seedBody.stretch = 2.15;
+      fractureBody(seedBody, true);
+
+      for (let i = 0; i < 16; i++) {
+        stepShards(0.75);
+        stepDust(0.016, 0.75);
+      }
+      flare = 0.16;
+      accreted = 0;
+      accWindow = 0;
+      simTime = 0;
+      logEvent(`<b>TIDAL DISRUPTION</b> Planet-α → ${S.n} shards at r = 3.55 R<sub>s</sub>`, 'tde');
+
+      // 2. Spawn an intact Ringed Super-Earth plunging toward the Roche limit
+      injectGrazingTDE();
+
+      // 3. Spawn an outgassing Icy Comet in an inclined relativistic rosette orbit
+      injectCometRosette();
+    }
+    initDefaultScene();
+
+    let last = performance.now(), fpsFrames = 0, fpsTime = 0, fps = 60, hudTimer = 0, accTimer = 0;
+    const flashEl = $('flare-flash');
+
+    function updateHUD() {
+      $('hud-fps').textContent = `${Math.round(fps)} FPS`;
+      $('hud-shards').textContent = `${S.n.toLocaleString()} / ${DU.n.toLocaleString()}`;
+      const rsKm = 2.953 * MSUN_PER_M * P.M;
+      $('hud-rs').textContent = `${D.Rs.toFixed(2)} M (${(rsKm / 1e6).toFixed(1)}M km)`;
+      $('hud-roche').textContent = `${(D.rH / D.Rs).toFixed(2)} / ${(D.isco / D.Rs).toFixed(2)} R_s`;
+      $('hud-roche-limit').textContent = `${(guideRadius(P.projType) / D.Rs).toFixed(2)} R_s`;
+      $('hud-coord-time').textContent = `t∞ = ${simHours().toFixed(2)} h`;
+
+      const flareErg = (flare * 2.4e38).toExponential(1).replace('+', '');
+      $('hud-stress').textContent = `${(accreted / BASE_MASS.rocky).toFixed(2)} M⊕ · ${flareErg}`;
+
+      const cursorTag = $('cursor-floating-tag');
+      if (cursorInside) {
+        const r = cursorRadius();
+        const al = r <= D.rH ? 0 : kerrLapse(r);
+        $('hud-dilation').textContent = r <= D.rH ? 'inside r_+' : `dτ/dt = ${al.toFixed(3)}`;
+        if (!aiming) {
+          cursorTag.style.display = 'block';
+          cursorTag.style.left = (cursorPx.x + 16) + 'px';
+          cursorTag.style.top = (cursorPx.y + 14) + 'px';
+          cursorTag.innerHTML = r <= D.rH
+            ? `r = ${(r / D.Rs).toFixed(2)} R<sub>s</sub> · <span style="color:#f43f5e">Inside Event Horizon</span>`
+            : `r = ${(r / D.Rs).toFixed(2)} R<sub>s</sub> · dτ/dt = <span style="color:${al < 0.5 ? '#f43f5e' : '#38bdf8'}">${al.toFixed(3)}</span> (1s = ${(1 / al).toFixed(2)}s at ∞)`;
+        } else {
+          cursorTag.style.display = 'none';
+        }
+      } else {
+        cursorTag.style.display = 'none';
+      }
+    }
+
+    function loop(now) {
+      requestAnimationFrame(loop);
+      let realDt = (now - last) / 1000;
+      last = now;
+      if (realDt > 0.1) realDt = 0.1;
+      fpsFrames++;
+      fpsTime += realDt;
+      if (fpsTime > 0.45) {
+        fps = fpsFrames / fpsTime;
+        fpsFrames = 0;
+        fpsTime = 0;
+      }
+
+      gM = P.M;
+      gJ = Math.min(P.spin, 0.998) * P.M * P.M;
+      const dtSim = P.paused ? 0 : Math.min(realDt, 1 / 20) * TIME_UNIT * P.timeScale;
+      if (dtSim > 0) {
+        stepBodies(dtSim);
+        stepShards(dtSim);
+        simTime += dtSim;
+        const rF = D.diskIn * 1.25;
+        flarePhi -= (Math.sqrt(P.M) / (Math.pow(rF, 1.5) + P.spin * Math.pow(P.M, 1.5))) * dtSim;
+      }
+      stepDust(P.paused ? 0 : realDt, dtSim);
+      updateBodyVisuals(dtSim);
+      updateShardInstances();
+
+      accTimer += realDt;
+      if (accTimer > 0.5) {
+        const hours = Math.max(1e-6, (0.5 * TIME_UNIT * P.timeScale * 4.925e-6 * MSUN_PER_M * P.M) / 3600);
+        const inst = P.paused ? 0 : accWindow / hours;
+        accRateSmooth = accRateSmooth * 0.6 + inst * 0.4;
+        accWindow = 0;
+        accTimer = 0;
+      }
+      flare *= Math.exp(-realDt * 0.72);
+      if (flare < 1e-4) flare = 0;
+
+      bhLight.intensity = 2.4 + flare * 1.1;
+      bhLight.color.setRGB(1.0, 0.84 + flare * 0.03, 0.66 + flare * 0.07);
+      bloomPass.strength = P.bloom + Math.min(flare, 1.25) * 0.03;
+      flashEl.style.opacity = Math.min(0.08, flare * 0.024).toFixed(3);
+
+      const g = guideRadius(P.projType);
+      rocheDisk.scale.setScalar(g);
+      rocheBill.scale.setScalar(g);
+      rocheBill.quaternion.copy(camera.quaternion);
+      rocheMat.opacity = aiming ? 0.58 : 0.24;
+      rocheMat.color.setHex(P.projType === 'binary' ? 0xa855f7 : 0xff8a3d);
+
+      controls.update();
+      camera.updateMatrixWorld();
+
+      const camDist = camera.position.length();
+      LU.uCamPos.value.copy(camera.position);
+      LU.uInvProj.value.copy(camera.projectionMatrixInverse);
+      LU.uCamWorld.value.copy(camera.matrixWorld);
+      LU.uViewProj.value.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      LU.uMass.value = P.M;
+      LU.uSpin.value = Math.min(P.spin, 0.998);
+      LU.uHorizon.value = D.rH;
+      LU.uPhotonR.value = D.photon;
+      LU.uDiskIn.value = D.diskIn;
+      LU.uDiskOut.value = D.diskOut;
+      LU.uDiskTemp.value = P.diskTemp;
+      LU.uDiskBright.value = 1.05 * clamp(Math.pow(P.diskTemp / 6500, 1.1), 0.3, 2.6);
+      LU.uTime.value = simTime + 100;
+      LU.uFlare.value = Math.min(flare, 1.25);
+      LU.uFlarePhi.value = flarePhi;
+      LU.uFlareR.value = D.diskIn * 1.25;
+      LU.uJet.value = Math.min(flare, 1.25) * 0.26 + Math.min(accRateSmooth / BASE_MASS.rocky, 1) * 0.08;
+      LU.uFastB.value = D.fastB;
+      LU.uJetLen.value = D.fastB * 0.72;
+      LU.uEscapeR.value = Math.max(camDist * 1.05 + 5, D.diskOut * 1.6, 50);
+      LU.uHasScene.value = (bodies.length || S.n || DU.n) ? 1 : 0;
+
+      // 1) Render 3D scene into offscreen HDR + Depth buffer
+      renderer.setRenderTarget(sceneRT);
+      renderer.setClearColor(0x000000, 0);
+      renderer.clear(true, true, true);
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+
+      // 2) Render Fullscreen Geodesic Lensing Pass + UnrealBloomPass + OutputPass
+      composer.render(realDt);
+
+      // 3) Render 3D Overlay Guides (Roche sphere, trajectory, slingshot vector)
+      renderer.clearDepth();
+      renderer.render(overlay, camera);
+
+      hudTimer += realDt;
+      if (hudTimer > 0.12) {
+        hudTimer = 0;
+        updateHUD();
+      }
+    }
+
+    requestAnimationFrame((t) => { last = t; loop(t); });
+  </script>
+
+<!-- PRES_COMPACT_START -->
+
+<style>
+  body.pres-compact {
+    overflow: hidden !important;
+  }
+  body.pres-compact #pres-left-hud,
+  body.pres-compact #pres-right-hud {
+    display: flex !important;
+  }
+  body:not(.pres-compact) #pres-left-hud,
+  body:not(.pres-compact) #pres-right-hud {
+    display: none !important;
+  }
+  #pres-left-hud {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 264px;
+    z-index: 9999;
+    background: rgba(12, 12, 14, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    border-radius: 10px;
+    padding: 12px 13px;
+    font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #FAFAFA;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.72);
+    pointer-events: auto;
+  }
+  #pres-right-hud {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 272px;
+    z-index: 9999;
+    background: rgba(12, 12, 14, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    border-radius: 10px;
+    padding: 12px 13px;
+    font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #FAFAFA;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.72);
+    pointer-events: auto;
+  }
+  .lr-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    padding-bottom: 5px;
+  }
+  .lr-header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lr-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    display: inline-block;
+  }
+  /* Live Dual Circular Dials */
+  .bh-dial-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  .bh-dial-card {
+    background: rgba(24, 24, 27, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 7px 6px 6px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .bh-dial-svg {
+    width: 96px;
+    height: 54px;
+    overflow: visible;
+  }
+  .bh-dial-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-top: -4px;
+  }
+  .bh-dial-lbl {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #A3A3A3;
+  }
+  /* Live Animated Bar Gauges */
+  .bh-gauge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(24, 24, 27, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px 9px;
+  }
+  .bh-gauge-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .bh-gauge-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    color: #E5E5E5;
+  }
+  .bh-gauge-head span:last-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+  }
+  .bh-gauge-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(64, 64, 64, 0.75);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .bh-gauge-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.12s ease-out;
+  }
+  .lr-metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .lr-metric {
+    background: rgba(24, 24, 27, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
+    padding: 5px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .lr-metric-label {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #A3A3A3;
+  }
+  .lr-metric-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 800;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lr-hint {
+    font-size: 10px;
+    color: #A3A3A3;
+    text-align: center;
+    padding-top: 1px;
+  }
+  .rh-btn {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(38, 38, 42, 0.95);
+    color: #FAFAFA;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    text-align: center;
+  }
+  .rh-btn:hover, .rh-btn.active {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+    color: #111111;
+  }
+  /* ONLY the single primary action button is Red */
+  .rh-btn.primary {
+    background: #DC2626;
+    border: 1.5px solid #DC2626;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 10px;
+  }
+  .rh-btn.amber {
+    background: #262626;
+    border: 1px solid #737373;
+    color: #FFFFFF;
+    font-weight: 800;
+  }
+  .rh-btn.danger {
+    background: #171717;
+    border: 1px solid #525252;
+    color: #D4D4D4;
+  }
+  .rh-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .rh-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+  }
+  .rh-slider-box {
+    background: rgba(24, 24, 27, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
+    padding: 5px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .rh-slider-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    color: #E5E5E5;
+  }
+  .rh-slider-head span:last-child {
+    color: #FFFFFF;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .rh-slider-box input[type="range"] {
+    width: 100%;
+    accent-color: #FFFFFF;
+    cursor: pointer;
+    height: 4px;
+  }
+  .rh-sec-label {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #A3A3A3;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+</style>
+
+<style>
+  body.pres-compact #top-telemetry-bar, body.pres-compact #event-log-panel, body.pres-compact #bottom-dock-wrapper, body.pres-compact #cursor-floating-tag, body.pres-compact #aim-floating-tag { display: none !important; }
+</style>
+<div id="pres-left-hud">
+  <div class="lr-header">
+    <span class="lr-header-left"><span class="lr-dot"></span>RELATIVITY TELEMETRY</span>
+    <span id="lh-fps" style="color:#E5E5E5;font-family:monospace;">60 FPS</span>
+  </div>
+
+  <!-- Dual Live Speedometer & Gravity Dial -->
+  <div class="bh-dial-row">
+    <div class="bh-dial-card">
+      <svg class="bh-dial-svg" viewBox="0 0 100 56">
+        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#3F3F46" stroke-width="8" stroke-linecap="round"/>
+        <path id="bh-arc-vel" d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="35"/>
+        <line id="bh-needle-vel" x1="50" y1="48" x2="74" y2="20" stroke="#EF4444" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="50" cy="48" r="3.5" fill="#FFFFFF"/>
+      </svg>
+      <div class="bh-dial-val" id="bh-val-vel" style="color:#FFFFFF;">0.72 c</div>
+      <div class="bh-dial-lbl">궤도 진입 속도 (v/c)</div>
+    </div>
+
+    <div class="bh-dial-card">
+      <svg class="bh-dial-svg" viewBox="0 0 100 56">
+        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#3F3F46" stroke-width="8" stroke-linecap="round"/>
+        <path id="bh-arc-lorentz" d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#A3A3A3" stroke-width="8" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="48"/>
+        <line id="bh-needle-lorentz" x1="50" y1="48" x2="68" y2="22" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="50" cy="48" r="3.5" fill="#FFFFFF"/>
+      </svg>
+      <div class="bh-dial-val" id="bh-val-lorentz" style="color:#FFFFFF;">γ = 2.14</div>
+      <div class="bh-dial-lbl">로렌츠 감마 인자 (γ)</div>
+    </div>
+  </div>
+
+  <!-- 4 Live Fluctuating Bar Gauges -->
+  <div class="bh-gauge-list">
+    <div class="bh-gauge-item">
+      <div class="bh-gauge-head"><span>조석 인장 응력 (Tidal Shear)</span><span id="bg-lbl-shear" style="color:#EF4444;">68%</span></div>
+      <div class="bh-gauge-track"><div class="bh-gauge-fill" id="bg-bar-shear" style="width:68%;background:#DC2626;"></div></div>
+    </div>
+    <div class="bh-gauge-item">
+      <div class="bh-gauge-head"><span>강착 플라즈마 광도 (Flare L_X)</span><span id="bg-lbl-flare" style="color:#FFFFFF;">54%</span></div>
+      <div class="bh-gauge-track"><div class="bh-gauge-fill" id="bg-bar-flare" style="width:54%;background:#FFFFFF;"></div></div>
+    </div>
+    <div class="bh-gauge-item">
+      <div class="bh-gauge-head"><span>사건의 지평선 시간 지연 (dτ/dt)</span><span id="bg-lbl-dil" style="color:#D4D4D4;">0.894x</span></div>
+      <div class="bh-gauge-track"><div class="bh-gauge-fill" id="bg-bar-dil" style="width:89%;background:#A3A3A3;"></div></div>
+    </div>
+    <div class="bh-gauge-item">
+      <div class="bh-gauge-head"><span>아인슈타인 링 굴절 강도</span><span id="bg-lbl-lens" style="color:#D4D4D4;">76%</span></div>
+      <div class="bh-gauge-track"><div class="bh-gauge-fill" id="bg-bar-lens" style="width:76%;background:#D4D4D4;"></div></div>
+    </div>
+  </div>
+
+  <!-- 4 Numeric Metrics -->
+  <div class="lr-metric-grid">
+    <div class="lr-metric"><span class="lr-metric-label">슈바르츠실트 R_s</span><span class="lr-metric-val" id="lh-1">2.00 M</span></div>
+    <div class="lr-metric"><span class="lr-metric-label">조석 한계 (Roche)</span><span class="lr-metric-val" id="lh-2" style="color:#FFFFFF;">3.85 R_s</span></div>
+    <div class="lr-metric"><span class="lr-metric-label">파편 · 플라즈마 입자</span><span class="lr-metric-val" id="lh-3" style="color:#FFFFFF;">0 / 0</span></div>
+    <div class="lr-metric"><span class="lr-metric-label">강착 질량 · X선 광도</span><span class="lr-metric-val" id="lh-4" style="color:#FFFFFF;">0.00 M⊕</span></div>
+  </div>
+  <div class="lr-hint">● 실시간 일반상대성이론 측지선 광선추적 자동 시연 중</div>
+</div>
+
+<div id="pres-right-hud" style="pointer-events:none;">
+  <div class="lr-header">
+    <span class="lr-header-left"><span class="lr-dot" style="background:#EF4444;"></span>AUTO SCENARIO SEQUENCE</span>
+  </div>
+
+  <div class="rh-slider-box" id="bh-auto-0" style="padding:8px 10px;border-color:#EF4444;background:rgba(220,38,38,0.2);">
+    <div class="rh-slider-head"><span style="font-weight:800;color:#FFFFFF;">01 · 행성 조석 파괴 (Grazing TDE)</span><span id="bh-ab-0">● 진행 중</span></div>
+    <div style="font-size:10px;color:#D4D4D4;">로슈 한계 진입 · 스파게티화 플라즈마 유입</div>
+  </div>
+
+  <div class="rh-slider-box" id="bh-auto-1" style="padding:8px 10px;">
+    <div class="rh-slider-head"><span style="font-weight:800;color:#FFFFFF;">02 · 혜성 상대론적 로제타 궤도</span><span id="bh-ab-1" style="color:#A3A3A3;">대기</span></div>
+    <div style="font-size:10px;color:#D4D4D4;">근일점 세차운동 및 아인슈타인 링 굴절</div>
+  </div>
+
+  <div class="rh-slider-box" id="bh-auto-2" style="padding:8px 10px;">
+    <div class="rh-slider-head"><span style="font-weight:800;color:#FFFFFF;">03 · 쌍성계 힐스 분리 (Hills Mechanism)</span><span id="bh-ab-2" style="color:#A3A3A3;">대기</span></div>
+    <div style="font-size:10px;color:#D4D4D4;">주성 포획 및 동반성 초고속 튕김 방출</div>
+  </div>
+
+  <div class="lr-metric-grid" style="margin-top:2px;">
+    <div class="lr-metric"><span class="lr-metric-label">블랙홀 질량</span><span class="lr-metric-val">1.00 M☉</span></div>
+    <div class="lr-metric"><span class="lr-metric-label">회전 스핀 (Kerr a*)</span><span class="lr-metric-val">+0.68</span></div>
+    <div class="lr-metric"><span class="lr-metric-label">강착 원반 온도</span><span class="lr-metric-val">6,500 K</span></div>
+    <div class="lr-metric"><span class="lr-metric-label">시점 제어</span><span class="lr-metric-val">자동 궤도</span></div>
+  </div>
+</div>
+<script>
+window.setPresBodyType = function(idx) {
+  ['rh-type-1','rh-type-2','rh-type-3'].forEach((id, i) => {
+    document.getElementById(id)?.classList.toggle('active', i + 1 === idx);
+  });
+  const map = {1: 'type-rocky', 2: 'type-comet', 3: 'type-binary'};
+  document.getElementById(map[idx])?.click();
+};
+window.setPresPointerMode = function(mode) {
+  document.getElementById('rh-mode-launch')?.classList.toggle('active', mode === 'launch');
+  document.getElementById('rh-mode-orbit')?.classList.toggle('active', mode === 'orbit');
+  document.getElementById(mode === 'launch' ? 'mode-launch' : 'mode-orbit')?.click();
+};
+(function() {
+  document.body.classList.add("pres-compact");
+  let tickPhase = 0;
+  setInterval(function() {
+    try {
+      tickPhase += 0.18;
+      const rsTxt = document.getElementById('hud-rs')?.textContent || '2.00 M';
+      const rocheTxt = document.getElementById('hud-roche-limit')?.textContent || '3.85 R_s';
+      const shardsTxt = document.getElementById('hud-shards')?.textContent || '0 / 0';
+      const stressTxt = document.getElementById('hud-stress')?.textContent || '0.00 M⊕';
+      const dilTxt = document.getElementById('hud-dilation')?.textContent || 'dτ/dt = 0.894';
+      const fpsTxt = document.getElementById('hud-fps')?.textContent || '60 FPS';
+
+      document.getElementById('lh-1').textContent = rsTxt.split('(')[0].trim();
+      document.getElementById('lh-2').textContent = rocheTxt;
+      document.getElementById('lh-3').textContent = shardsTxt;
+      document.getElementById('lh-4').textContent = stressTxt.split('·')[0].trim();
+      document.getElementById('lh-fps').textContent = fpsTxt;
+
+      // Parse shards & plasma counts to drive live dynamic gauges and speedometer
+      const parts = shardsTxt.split('/').map(s => parseInt(s.replace(/\D/g,''), 10) || 0);
+      const shardCount = parts[0] || 0;
+      const plasmaCount = parts[1] || 0;
+      const totalParticles = shardCount + plasmaCount;
+
+      const massVal = parseFloat(document.getElementById('slider-bh-mass')?.value || '1.0');
+      const spinVal = parseFloat(document.getElementById('slider-bh-spin')?.value || '0.68');
+      const timeScale = parseFloat(document.getElementById('slider-time-scale')?.value || '1.0');
+
+      // Live orbital velocity (v / c) fluctuating with active tidal debris & spin
+      const particleBoost = Math.min(0.32, totalParticles / 4200);
+      const wave = 0.045 * Math.sin(tickPhase * 1.7) + 0.025 * Math.cos(tickPhase * 3.1);
+      const vOverC = Math.max(0.28, Math.min(0.96, 0.52 + 0.14 * spinVal + 0.08 * (massVal - 1.0) + particleBoost + wave * (timeScale > 0.05 ? 1 : 0)));
+      const gamma = 1 / Math.sqrt(Math.max(0.06, 1 - vOverC * vOverC));
+
+      // Update Speedometer Dial 1 (v / c)
+      const velPct = Math.max(0, Math.min(1, (vOverC - 0.15) / 0.85));
+      const arcVel = document.getElementById('bh-arc-vel');
+      const needleVel = document.getElementById('bh-needle-vel');
+      if (arcVel) arcVel.setAttribute('stroke-dashoffset', (126 * (1 - velPct)).toFixed(1));
+      if (needleVel) {
+        const ang = Math.PI * (1 - velPct);
+        const nx = 50 + 34 * Math.cos(ang);
+        const ny = 48 - 34 * Math.sin(ang);
+        needleVel.setAttribute('x2', nx.toFixed(1));
+        needleVel.setAttribute('y2', ny.toFixed(1));
+      }
+      const valVelEl = document.getElementById('bh-val-vel');
+      if (valVelEl) valVelEl.textContent = vOverC.toFixed(2) + ' c';
+
+      // Update Lorentz Dial 2 (gamma)
+      const gamPct = Math.max(0, Math.min(1, (gamma - 1.0) / 3.2));
+      const arcGam = document.getElementById('bh-arc-lorentz');
+      const needleGam = document.getElementById('bh-needle-lorentz');
+      if (arcGam) arcGam.setAttribute('stroke-dashoffset', (126 * (1 - gamPct)).toFixed(1));
+      if (needleGam) {
+        const ang2 = Math.PI * (1 - gamPct);
+        const nx2 = 50 + 34 * Math.cos(ang2);
+        const ny2 = 48 - 34 * Math.sin(ang2);
+        needleGam.setAttribute('x2', nx2.toFixed(1));
+        needleGam.setAttribute('y2', ny2.toFixed(1));
+      }
+      const valGamEl = document.getElementById('bh-val-lorentz');
+      if (valGamEl) valGamEl.textContent = 'γ = ' + gamma.toFixed(2);
+
+      // Update 4 Live Bar Gauges
+      const shearPct = Math.round(Math.max(18, Math.min(99, 32 + (shardCount / 14) + 18 * massVal + 9 * Math.sin(tickPhase * 2.1))));
+      const flarePct = Math.round(Math.max(15, Math.min(99, 28 + (plasmaCount / 22) + 22 * spinVal + 8 * Math.cos(tickPhase * 2.6))));
+      const dilMatch = dilTxt.match(/([0-9.]+)/);
+      const dilNum = dilMatch ? parseFloat(dilMatch[1]) : 0.894;
+      const dilBarPct = Math.round(Math.max(12, Math.min(98, dilNum * 100)));
+      const lensPct = Math.round(Math.max(20, Math.min(99, 38 * massVal + 32 * spinVal + 6 * Math.sin(tickPhase))));
+
+      document.getElementById('bg-lbl-shear').textContent = shearPct + '%';
+      document.getElementById('bg-bar-shear').style.width = shearPct + '%';
+      document.getElementById('bg-lbl-flare').textContent = flarePct + '%';
+      document.getElementById('bg-bar-flare').style.width = flarePct + '%';
+      document.getElementById('bg-lbl-dil').textContent = dilNum.toFixed(3) + 'x';
+      document.getElementById('bg-bar-dil').style.width = dilBarPct + '%';
+      document.getElementById('bg-lbl-lens').textContent = lensPct + '%';
+      document.getElementById('bg-bar-lens').style.width = lensPct + '%';
+    } catch (e) {}
+  }, 110);
+  setTimeout(function() {
+    window.dispatchEvent(new Event("resize"));
+    document.getElementById('mode-orbit')?.click();
+  }, 120);
+
+  function setBhAutoStage(idx) {
+    for (let i = 0; i < 3; i++) {
+      const box = document.getElementById('bh-auto-' + i);
+      const bdg = document.getElementById('bh-ab-' + i);
+      const act = (i === idx);
+      if (box) {
+        box.style.borderColor = act ? '#EF4444' : 'rgba(255,255,255,0.16)';
+        box.style.background = act ? 'rgba(220,38,38,0.2)' : 'rgba(24,24,27,0.9)';
+      }
+      if (bdg) {
+        bdg.textContent = act ? '● 진행 중' : '대기';
+        bdg.style.color = act ? '#FFFFFF' : '#A3A3A3';
+      }
+    }
+  }
+
+  function runBhAutoSequence() {
+    setBhAutoStage(0);
+    document.getElementById('preset-tde')?.click();
+    setTimeout(function() {
+      setBhAutoStage(1);
+      document.getElementById('preset-rosette')?.click();
+    }, 7000);
+    setTimeout(function() {
+      setBhAutoStage(2);
+      document.getElementById('preset-binary')?.click();
+    }, 14000);
+  }
+  setTimeout(runBhAutoSequence, 900);
+  setInterval(runBhAutoSequence, 21000);
+})();
+</script>
+<!-- PRES_COMPACT_END -->
+</body>
+</html>

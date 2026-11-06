@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemini 4.0 · 50-AGV Smart Warehouse Swarm Control</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #070B14;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #F8FAFC;
+  }
+  #canvas-wrap { position: fixed; inset: 0; z-index: 1; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* Left Telemetry HUD with Live Speedometer & Dynamic Gauges */
+  #pres-left-hud {
+    position: fixed; top: 12px; left: 12px; width: 266px;
+    background: rgba(12, 12, 14, 0.92);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    border-radius: 10px; padding: 12px 13px;
+    z-index: 20; pointer-events: none;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.72);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .hud-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+    color: #FFFFFF; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    padding-bottom: 5px;
+  }
+  .hud-kicker-left {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hud-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #FFFFFF;
+  }
+  .dial-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 7px;
+  }
+  .dial-card {
+    background: rgba(24, 24, 27, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px; padding: 7px 6px 6px 6px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .dial-svg {
+    width: 96px; height: 54px; overflow: visible;
+  }
+  .dial-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 800; color: #FFFFFF; margin-top: -4px;
+  }
+  .dial-lbl {
+    font-size: 9.5px; font-weight: 700; color: #A3A3A3;
+  }
+  .gauge-list {
+    display: flex; flex-direction: column; gap: 6px;
+    background: rgba(24, 24, 27, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px; padding: 8px 9px;
+  }
+  .gauge-item {
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .gauge-head {
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-weight: 700; color: #E5E5E5;
+  }
+  .gauge-head span:last-child {
+    font-family: 'JetBrains Mono', monospace; font-weight: 800;
+  }
+  .gauge-track {
+    width: 100%; height: 6px;
+    background: rgba(64, 64, 64, 0.75);
+    border-radius: 999px; overflow: hidden;
+  }
+  .gauge-fill {
+    height: 100%; border-radius: 999px;
+    transition: width 0.12s ease-out;
+  }
+  .hud-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+  }
+  .hud-metric {
+    background: rgba(24, 24, 27, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px; padding: 5px 8px;
+  }
+  .hud-label { font-size: 9.5px; color: #A3A3A3; font-weight: 600; margin-bottom: 1px; }
+  .hud-val {
+    font-size: 12.5px; font-weight: 800; color: #FFFFFF;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .hud-val.green { color: #FFFFFF; }
+  .hud-val.cyan { color: #FFFFFF; }
+  .hud-val.amber { color: #FFFFFF; }
+  .legend-pills {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: space-between;
+    font-size: 9.5px; color: #D4D4D4; padding-top: 2px;
+  }
+  .l-pill { display: inline-flex; align-items: center; gap: 4px; }
+  .l-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* Right Interactive Control HUD */
+  #pres-right-hud {
+    position: fixed; top: 12px; right: 12px; width: 274px;
+    background: rgba(12, 12, 14, 0.92);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    border-radius: 10px; padding: 12px 13px;
+    z-index: 20;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.72);
+    display: flex; flex-direction: column; gap: 6.5px;
+  }
+  .ctrl-title {
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em;
+    color: #FFFFFF; text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    padding-bottom: 5px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ctrl-btn {
+    width: 100%; border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(38, 38, 42, 0.95); color: #FAFAFA;
+    font-size: 11px; font-weight: 700; padding: 6.5px 9px;
+    border-radius: 6px; cursor: pointer; text-align: center;
+    transition: all 0.14s ease; font-family: inherit;
+  }
+  .ctrl-btn:hover { background: #FFFFFF; border-color: #FFFFFF; color: #111111; }
+  /* ONLY the single primary obstacle drop button is Red */
+  .ctrl-btn.danger {
+    background: #DC2626;
+    border-color: #DC2626; color: #FFFFFF; font-weight: 800;
+  }
+  .ctrl-btn.amber {
+    background: #262626;
+    border-color: #737373; color: #FFFFFF; font-weight: 800;
+  }
+  .ctrl-btn.primary {
+    background: #FFFFFF;
+    border-color: #FFFFFF; color: #111111; font-weight: 800;
+  }
+  .ctrl-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .ctrl-row-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .ctrl-mini {
+    background: rgba(24, 24, 27, 0.9); color: #D4D4D4;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 6px; padding: 5px 4px; font-size: 10px; font-weight: 700;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .ctrl-mini.active, .ctrl-mini:hover {
+    background: #FFFFFF; color: #111111; border-color: #FFFFFF;
+  }
+  .ctrl-sub {
+    font-size: 9.5px; color: #A3A3A3; font-weight: 800;
+    letter-spacing: 0.04em; text-transform: uppercase; margin-top: 1px;
+  }
+  .slider-box {
+    background: rgba(24, 24, 27, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px; padding: 5px 8px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .slider-head {
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-weight: 700; color: #E5E5E5;
+  }
+  .slider-head span:last-child {
+    color: #FFFFFF; font-family: 'JetBrains Mono', monospace;
+  }
+  .slider-box input[type="range"] {
+    width: 100%; accent-color: #FFFFFF; cursor: pointer; height: 4px;
+  }
+
+  #toast-banner {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(12, 12, 14, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 6px; padding: 6px 14px;
+    font-size: 11px; font-weight: 700; color: #F5F5F5;
+    z-index: 15; pointer-events: none;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div id="canvas-wrap"></div>
+
+<!-- Left Telemetry HUD -->
+<div id="pres-left-hud">
+  <div class="hud-kicker">
+    <span class="hud-kicker-left"><span class="hud-dot"></span>SWARM TELEMETRY</span>
+    <span style="color:#FFFFFF;font-family:monospace;">충돌 0건</span>
+  </div>
+
+  <!-- Dual Live Speedometer & Throughput Tachometer -->
+  <div class="dial-row">
+    <div class="dial-card">
+      <svg class="dial-svg" viewBox="0 0 100 56">
+        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#3F3F46" stroke-width="8" stroke-linecap="round"/>
+        <path id="agv-arc-spd" d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="52"/>
+        <line id="agv-needle-spd" x1="50" y1="48" x2="66" y2="20" stroke="#EF4444" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="50" cy="48" r="3.5" fill="#FFFFFF"/>
+      </svg>
+      <div class="dial-val" id="agv-val-spd">2.4 m/s</div>
+      <div class="dial-lbl">군집 평균 속도</div>
+    </div>
+
+    <div class="dial-card">
+      <svg class="dial-svg" viewBox="0 0 100 56">
+        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#3F3F46" stroke-width="8" stroke-linecap="round"/>
+        <path id="agv-arc-tput" d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="#A3A3A3" stroke-width="8" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="44"/>
+        <line id="agv-needle-tput" x1="50" y1="48" x2="70" y2="22" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="50" cy="48" r="3.5" fill="#FFFFFF"/>
+      </svg>
+      <div class="dial-val" id="agv-val-tput" style="color:#FFFFFF;">142 /분</div>
+      <div class="dial-lbl">실시간 처리 속도</div>
+    </div>
+  </div>
+
+  <!-- 4 Live Fluctuating Bar Gauges -->
+  <div class="gauge-list">
+    <div class="gauge-item">
+      <div class="gauge-head"><span>중앙 통로 혼잡도 (Congestion)</span><span id="agv-lbl-cong" style="color:#EF4444;">34%</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="agv-bar-cong" style="width:34%;background:#DC2626;"></div></div>
+    </div>
+    <div class="gauge-item">
+      <div class="gauge-head"><span>A* 경로 재탐색 부하 (Engine Load)</span><span id="agv-lbl-load" style="color:#FFFFFF;">28%</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="agv-bar-load" style="width:28%;background:#FFFFFF;"></div></div>
+    </div>
+    <div class="gauge-item">
+      <div class="gauge-head"><span>교차로 양보 대기율 (Yield Ratio)</span><span id="agv-lbl-yield" style="color:#D4D4D4;">8%</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="agv-bar-yield" style="width:8%;background:#A3A3A3;"></div></div>
+    </div>
+    <div class="gauge-item">
+      <div class="gauge-head"><span>적재 가동률 (Payload Active)</span><span id="agv-lbl-carry" style="color:#D4D4D4;">52%</span></div>
+      <div class="gauge-track"><div class="gauge-fill" id="agv-bar-carry" style="width:52%;background:#D4D4D4;"></div></div>
+    </div>
+  </div>
+
+  <div class="hud-grid">
+    <div class="hud-metric">
+      <div class="hud-label">가동 로봇 · 장애물</div>
+      <div class="hud-val cyan"><span id="hud-agv-count">50대</span> · <span id="hud-obstacles" style="color:#EF4444;">0개</span></div>
+    </div>
+    <div class="hud-metric">
+      <div class="hud-label">교차로 양보 대기</div>
+      <div class="hud-val amber" id="hud-yielding">0 대</div>
+    </div>
+    <div class="hud-metric">
+      <div class="hud-label">A* 실시간 우회</div>
+      <div class="hud-val amber" id="hud-reroutes">0 회</div>
+    </div>
+    <div class="hud-metric">
+      <div class="hud-label">누적 물류 처리</div>
+      <div class="hud-val green" id="hud-deliveries">0 박스</div>
+    </div>
+  </div>
+
+  <div class="legend-pills">
+    <span class="l-pill"><span class="l-dot" style="background:#FFFFFF;"></span>적재</span>
+    <span class="l-pill"><span class="l-dot" style="background:#A3A3A3;"></span>빈차</span>
+    <span class="l-pill"><span class="l-dot" style="background:#525252;"></span>양보</span>
+    <span class="l-pill"><span class="l-dot" style="background:#EF4444;"></span>장애물</span>
+  </div>
+</div>
+
+<!-- Right Auto-Sequence Telemetry HUD (Hands-Free TV Stage) -->
+<div id="pres-right-hud" style="pointer-events:none;">
+  <div class="ctrl-title"><span class="hud-dot" style="background:#EF4444;"></span>AUTO SWARM SEQUENCE</div>
+
+  <div class="slider-box" id="auto-st-0" style="padding:8px 10px;border-color:#FFFFFF;background:rgba(255,255,255,0.12);">
+    <div class="slider-head"><span style="font-weight:800;color:#FFFFFF;">01 · 50대 정상 군집 주행</span><span id="auto-b-0">● 진행 중</span></div>
+    <div style="font-size:10px;color:#D4D4D4;">교차로 양보 및 최적 경로 분배</div>
+  </div>
+
+  <div class="slider-box" id="auto-st-1" style="padding:8px 10px;">
+    <div class="slider-head"><span style="font-weight:800;color:#FFFFFF;">02 · 중앙 통로 장애물 4개 낙하</span><span id="auto-b-1" style="color:#A3A3A3;">대기</span></div>
+    <div style="font-size:10px;color:#D4D4D4;">낙하 즉시 막힌 경로 감지 · A* 재탐색</div>
+  </div>
+
+  <div class="slider-box" id="auto-st-2" style="padding:8px 10px;">
+    <div class="slider-head"><span style="font-weight:800;color:#FFFFFF;">03 · 다중 통로 연쇄 낙하 우회</span><span id="auto-b-2" style="color:#A3A3A3;">대기</span></div>
+    <div style="font-size:10px;color:#D4D4D4;">복합 병목 구간 충돌 0건 우회 주행</div>
+  </div>
+
+  <div class="slider-box" id="auto-st-3" style="padding:8px 10px;">
+    <div class="slider-head"><span style="font-weight:800;color:#FFFFFF;">04 · 장애물 회수 · 통로 정상화</span><span id="auto-b-3" style="color:#A3A3A3;">대기</span></div>
+    <div style="font-size:10px;color:#D4D4D4;">최단 거리 주행 복귀 및 고속 처리</div>
+  </div>
+
+  <div style="display:none;">
+    <button id="btn-drop-obs"></button>
+    <button id="btn-drop-mega"></button>
+    <button id="btn-clear-obs"></button>
+    <input type="range" id="slider-fleet" value="50" /><span id="val-fleet"></span>
+    <input type="range" id="slider-speed" value="1.0" /><span id="val-speed"></span>
+    <input type="range" id="slider-detour" value="2.4" /><span id="val-detour"></span>
+    <input type="range" id="slider-grav" value="42" /><span id="val-grav"></span>
+    <button id="btn-surge"></button>
+    <button id="btn-toggle-lines"></button>
+  </div>
+</div>
+
+<div id="toast-banner">● 자동 시연 중 · 돌발 장애물 낙하 및 50대 로봇 실시간 A* 무충돌 우회</div>
+
+<script>
+(() => {
+  // Warehouse Grid Constants
+  const COLS = 22;
+  const ROWS = 14;
+  const TILE = 1.35;
+  const HALF_W = (COLS - 1) * TILE * 0.5;
+  const HALF_H = (ROWS - 1) * TILE * 0.5;
+
+  function gridToWorld(gx, gz) {
+    return {
+      x: gx * TILE - HALF_W,
+      z: gz * TILE - HALF_H
+    };
+  }
+
+  // Scene & Renderer
+  const wrap = document.getElementById('canvas-wrap');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x070B14);
+  scene.fog = new THREE.FogExp2(0x070B14, 0.015);
+
+  const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 21.5, 19.5);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  wrap.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.target.set(0, 0, 0.5);
+  controls.maxPolarAngle = Math.PI * 0.46;
+  controls.minDistance = 8;
+  controls.maxDistance = 42;
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0x94A3B8, 0.72));
+  const dirLight = new THREE.DirectionalLight(0xF8FAFC, 0.95);
+  dirLight.position.set(14, 28, 16);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(2048, 2048);
+  dirLight.shadow.camera.left = -22;
+  dirLight.shadow.camera.right = 22;
+  dirLight.shadow.camera.top = 18;
+  dirLight.shadow.camera.bottom = -18;
+  scene.add(dirLight);
+
+  const blueFill = new THREE.PointLight(0x38BDF8, 0.55, 45);
+  blueFill.position.set(-12, 10, -8);
+  scene.add(blueFill);
+
+  // Warehouse Floor & Tile Map
+  // Tile types: 0 = aisle, 1 = pick dock (left/right edges), 2 = storage pod zone
+  const tileType = Array.from({ length: COLS }, () => Array(ROWS).fill(0));
+  const obstacleMap = Array.from({ length: COLS }, () => Array(ROWS).fill(false));
+  const pickDocks = [];
+  const storageSlots = [];
+
+  for (let x = 0; x < COLS; x++) {
+    for (let z = 0; z < ROWS; z++) {
+      if ((x === 0 || x === COLS - 1) && z % 2 === 1) {
+        tileType[x][z] = 1;
+        pickDocks.push({ x, z });
+      } else if (
+        x >= 3 && x <= COLS - 4 &&
+        x !== 10 && x !== 11 && // central highway columns
+        (z === 2 || z === 3 || z === 6 || z === 7 || z === 10 || z === 11) &&
+        (x % 3 !== 2)
+      ) {
+        tileType[x][z] = 2;
+        storageSlots.push({ x, z });
+      }
+    }
+  }
+
+  // Base platform
+  const baseGeo = new THREE.BoxGeometry(COLS * TILE + 1.4, 0.35, ROWS * TILE + 1.4);
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0B1324, roughness: 0.75, metalness: 0.2 });
+  const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+  baseMesh.position.y = -0.18;
+  baseMesh.receiveShadow = true;
+  scene.add(baseMesh);
+
+  // Grid lines & tile markers
+  const tileGroup = new THREE.Group();
+  scene.add(tileGroup);
+
+  const floorClickPlanes = [];
+  const planeGeo = new THREE.PlaneGeometry(TILE * 0.92, TILE * 0.92);
+  planeGeo.rotateX(-Math.PI / 2);
+
+  const matAisle = new THREE.MeshBasicMaterial({ color: 0x111C33, transparent: true, opacity: 0.65 });
+  const matHighway = new THREE.MeshBasicMaterial({ color: 0x172554, transparent: true, opacity: 0.78 });
+  const matDock = new THREE.MeshBasicMaterial({ color: 0x065F46, transparent: true, opacity: 0.82 });
+  const matPodZone = new THREE.MeshBasicMaterial({ color: 0x1E293B, transparent: true, opacity: 0.78 });
+
+  // Static decorative racks on storage slots
+  const podRackGeo = new THREE.BoxGeometry(TILE * 0.66, 0.12, TILE * 0.66);
+  const podRackMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.4 });
+
+  for (let x = 0; x < COLS; x++) {
+    for (let z = 0; z < ROWS; z++) {
+      const pos = gridToWorld(x, z);
+      let mat = matAisle;
+      if (tileType[x][z] === 1) mat = matDock;
+      else if (tileType[x][z] === 2) mat = matPodZone;
+      else if (x === 10 || x === 11 || z === 4 || z === 5 || z === 8 || z === 9) mat = matHighway;
+
+      const tileMesh = new THREE.Mesh(planeGeo, mat);
+      tileMesh.position.set(pos.x, 0.01, pos.z);
+      tileMesh.userData = { gx: x, gz: z };
+      tileGroup.add(tileMesh);
+      floorClickPlanes.push(tileMesh);
+
+      if (tileType[x][z] === 2) {
+        const marker = new THREE.Mesh(podRackGeo, podRackMat);
+        marker.position.set(pos.x, 0.06, pos.z);
+        scene.add(marker);
+      } else if (tileType[x][z] === 1) {
+        // Picking station arch
+        const dockGeo = new THREE.BoxGeometry(TILE * 0.75, 0.75, TILE * 0.75);
+        const dockMat = new THREE.MeshStandardMaterial({
+          color: 0x10B981, emissive: 0x064E3B, roughness: 0.35, metalness: 0.4
+        });
+        const dockMesh = new THREE.Mesh(dockGeo, dockMat);
+        dockMesh.position.set(pos.x + (x === 0 ? -0.35 : 0.35), 0.38, pos.z);
+        dockMesh.castShadow = true;
+        scene.add(dockMesh);
+      }
+    }
+  }
+
+  // Dynamic Obstacle Meshes with Gravity Free-Fall, Heavy Bounce & Impact Shockwave
+  const obstacleMeshes = new Map();
+  const fallingObstacles = [];
+  const shockwaves = [];
+
+  const obsGeo = new THREE.BoxGeometry(TILE * 0.82, 0.96, TILE * 0.82);
+  const obsMat = new THREE.MeshStandardMaterial({
+    color: 0xEF4444, emissive: 0x7F1D1D, roughness: 0.28, metalness: 0.35
+  });
+  const obsStripeGeo = new THREE.BoxGeometry(TILE * 0.85, 0.16, TILE * 0.85);
+  const obsStripeMat = new THREE.MeshStandardMaterial({
+    color: 0xFBBF24, emissive: 0x78350F, roughness: 0.3, metalness: 0.4
+  });
+  const targetRingGeo = new THREE.RingGeometry(TILE * 0.22, TILE * 0.44, 28);
+  targetRingGeo.rotateX(-Math.PI / 2);
+
+  function createCrateGroup() {
+    const grp = new THREE.Group();
+    const box = new THREE.Mesh(obsGeo, obsMat);
+    box.castShadow = true;
+    box.receiveShadow = true;
+    grp.add(box);
+
+    const bandTop = new THREE.Mesh(obsStripeGeo, obsStripeMat);
+    bandTop.position.y = 0.26;
+    grp.add(bandTop);
+
+    const bandBot = new THREE.Mesh(obsStripeGeo, obsStripeMat);
+    bandBot.position.y = -0.26;
+    grp.add(bandBot);
+    return grp;
+  }
+
+  function spawnShockwave(wx, wz) {
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xF97316,
+      transparent: true,
+      opacity: 0.92,
+      side: THREE.DoubleSide
+    });
+    const mesh = new THREE.Mesh(targetRingGeo, ringMat);
+    mesh.position.set(wx, 0.04, wz);
+    scene.add(mesh);
+    shockwaves.push({ mesh, mat: ringMat, age: 0 });
+  }
+
+  function setObstacle(gx, gz, active, delaySec = 0) {
+    if (tileType[gx][gz] === 1) return; // Don't block docks
+    // Don't place obstacle right on top of a robot's current tile
+    if (active && robots.some(r => (r.gx === gx && r.gz === gz) || (r.tx === gx && r.tz === gz))) {
+      return;
+    }
+    const key = `${gx},${gz}`;
+    if (active && !obstacleMap[gx][gz]) {
+      obstacleMap[gx][gz] = true;
+      const pos = gridToWorld(gx, gz);
+      const crate = createCrateGroup();
+      const startY = 14.5 + Math.random() * 2.5;
+      crate.position.set(pos.x, startY, pos.z);
+      // Slight initial air tilt before impact levels it out
+      crate.rotation.set((Math.random() - 0.5) * 0.35, 0, (Math.random() - 0.5) * 0.35);
+      scene.add(crate);
+
+      // Floor drop-zone warning reticle while falling
+      const warnMat = new THREE.MeshBasicMaterial({
+        color: 0xEF4444,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide
+      });
+      const warnRing = new THREE.Mesh(targetRingGeo, warnMat);
+      warnRing.position.set(pos.x, 0.03, pos.z);
+      scene.add(warnRing);
+
+      obstacleMeshes.set(key, crate);
+      fallingObstacles.push({
+        key,
+        mesh: crate,
+        warnRing,
+        warnMat,
+        wx: pos.x,
+        wz: pos.z,
+        y: startY,
+        vy: 0,
+        rx: crate.rotation.x,
+        rz: crate.rotation.z,
+        delay: delaySec,
+        bounces: 0,
+        settled: false
+      });
+    } else if (!active && obstacleMap[gx][gz]) {
+      obstacleMap[gx][gz] = false;
+      const m = obstacleMeshes.get(key);
+      if (m) {
+        scene.remove(m);
+        obstacleMeshes.delete(key);
+      }
+      for (let i = fallingObstacles.length - 1; i >= 0; i--) {
+        if (fallingObstacles[i].key === key) {
+          if (fallingObstacles[i].warnRing) scene.remove(fallingObstacles[i].warnRing);
+          fallingObstacles.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  let customGrav = 42.0;
+  let detourWeight = 2.4;
+  let rerouteLoadPulse = 28;
+  let tickPhase = 0;
+
+  function stepObstacleGravity(dt) {
+    const GRAVITY = -customGrav; // m/s^2 snappy heavy industrial drop
+    const FLOOR_Y = 0.48;
+
+    for (let i = fallingObstacles.length - 1; i >= 0; i--) {
+      const fo = fallingObstacles[i];
+      if (fo.delay > 0) {
+        fo.delay -= dt;
+        if (fo.warnRing) {
+          const pulse = 1.0 + 0.25 * Math.sin(performance.now() * 0.02);
+          fo.warnRing.scale.set(pulse, pulse, 1);
+        }
+        continue;
+      }
+
+      fo.vy += GRAVITY * dt;
+      fo.y += fo.vy * dt;
+
+      if (fo.y <= FLOOR_Y) {
+        fo.y = FLOOR_Y;
+        if (Math.abs(fo.vy) > 2.4 && fo.bounces < 3) {
+          // Elastic bounce with heavy damping
+          if (fo.bounces === 0) {
+            spawnShockwave(fo.wx, fo.wz);
+            if (fo.warnRing) {
+              scene.remove(fo.warnRing);
+              fo.warnRing = null;
+            }
+          }
+          fo.vy = -fo.vy * (0.34 - fo.bounces * 0.08);
+          fo.bounces++;
+          fo.rx *= 0.35;
+          fo.rz *= 0.35;
+        } else {
+          fo.vy = 0;
+          fo.rx = 0;
+          fo.rz = 0;
+          fo.settled = true;
+          if (fo.warnRing) {
+            scene.remove(fo.warnRing);
+            fo.warnRing = null;
+          }
+        }
+      } else {
+        // Gradually level orientation during descent/bounce
+        fo.rx *= Math.exp(-3.5 * dt);
+        fo.rz *= Math.exp(-3.5 * dt);
+      }
+
+      fo.mesh.position.y = fo.y;
+      fo.mesh.rotation.x = fo.rx;
+      fo.mesh.rotation.z = fo.rz;
+
+      if (fo.settled) {
+        fallingObstacles.splice(i, 1);
+      }
+    }
+
+    // Animate impact shockwave rings on the warehouse floor
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+      const sw = shockwaves[i];
+      sw.age += dt;
+      const t = sw.age / 0.55;
+      if (t >= 1.0) {
+        scene.remove(sw.mesh);
+        sw.mat.dispose();
+        shockwaves.splice(i, 1);
+      } else {
+        const s = 1.0 + t * 2.8;
+        sw.mesh.scale.set(s, s, 1);
+        sw.mat.opacity = (1.0 - t) * 0.9;
+      }
+    }
+  }
+
+  // A* Pathfinding with Congestion Cost
+  const occupancyCount = Array.from({ length: COLS }, () => Array(ROWS).fill(0));
+  let totalReroutes = 0;
+  let totalDeliveries = 0;
+
+  function findPathAStar(sx, sz, ex, ez, ignoreRobotId) {
+    if (sx === ex && sz === ez) return [];
+    const open = [];
+    const gScore = Array.from({ length: COLS }, () => Array(ROWS).fill(Infinity));
+    const parent = Array.from({ length: COLS }, () => Array(ROWS).fill(null));
+    const closed = Array.from({ length: COLS }, () => Array(ROWS).fill(false));
+
+    gScore[sx][sz] = 0;
+    open.push({ x: sx, z: sz, f: Math.abs(ex - sx) + Math.abs(ez - sz) });
+
+    const dirs = [
+      { dx: 1, dz: 0 }, { dx: -1, dz: 0 },
+      { dx: 0, dz: 1 }, { dx: 0, dz: -1 }
+    ];
+
+    while (open.length > 0) {
+      open.sort((a, b) => a.f - b.f);
+      const curr = open.shift();
+      if (curr.x === ex && curr.z === ez) {
+        const path = [];
+        let cx = ex, cz = ez;
+        while (!(cx === sx && cz === sz)) {
+          path.push({ x: cx, z: cz });
+          const p = parent[cx][cz];
+          if (!p) break;
+          cx = p.x; cz = p.z;
+        }
+        path.reverse();
+        return path;
+      }
+      if (closed[curr.x][curr.z]) continue;
+      closed[curr.x][curr.z] = true;
+
+      for (const d of dirs) {
+        const nx = curr.x + d.dx;
+        const nz = curr.z + d.dz;
+        if (nx < 0 || nx >= COLS || nz < 0 || nz >= ROWS) continue;
+        if (closed[nx][nz]) continue;
+        if (obstacleMap[nx][nz] && !(nx === ex && nz === ez)) continue;
+
+        // Add soft congestion penalty so robots naturally spread across parallel aisles
+        let stepCost = 1.0;
+        if (tileType[nx][nz] === 2 && !(nx === ex && nz === ez)) stepCost += 0.6;
+        if (occupancyCount[nx][nz] > 0 && !(nx === ex && nz === ez)) stepCost += detourWeight;
+
+        const tentativeG = gScore[curr.x][curr.z] + stepCost;
+        if (tentativeG < gScore[nx][nz]) {
+          gScore[nx][nz] = tentativeG;
+          parent[nx][nz] = { x: curr.x, z: curr.z };
+          const h = Math.abs(ex - nx) + Math.abs(ez - nz);
+          open.push({ x: nx, z: nz, f: tentativeG + h });
+        }
+      }
+    }
+    return [];
+  }
+
+  // Shared Geometries & Materials for 50 AGV Robots
+  const bodyGeo = new THREE.BoxGeometry(TILE * 0.56, 0.24, TILE * 0.56);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xF97316, roughness: 0.35, metalness: 0.45 });
+  const podGeo = new THREE.BoxGeometry(TILE * 0.5, 0.52, TILE * 0.5);
+  const ringGeo = new THREE.RingGeometry(TILE * 0.30, TILE * 0.36, 24);
+  ringGeo.rotateX(-Math.PI / 2);
+
+  const matStateCarry = new THREE.MeshBasicMaterial({ color: 0x10B981, side: THREE.DoubleSide });
+  const matStateEmpty = new THREE.MeshBasicMaterial({ color: 0x38BDF8, side: THREE.DoubleSide });
+  const matStateYield = new THREE.MeshBasicMaterial({ color: 0xF59E0B, side: THREE.DoubleSide });
+
+  const podCarryMat = new THREE.MeshStandardMaterial({
+    color: 0x0EA5E9, emissive: 0x0369A1, roughness: 0.3, metalness: 0.25
+  });
+
+  const robots = [];
+  const robotGroup = new THREE.Group();
+  const pathLineGroup = new THREE.Group();
+  scene.add(robotGroup);
+  scene.add(pathLineGroup);
+
+  function pickRandomGoal(carrying) {
+    if (carrying) {
+      return pickDocks[Math.floor(Math.random() * pickDocks.length)];
+    }
+    const candidates = storageSlots.filter(s => !obstacleMap[s.x][s.z]);
+    return candidates[Math.floor(Math.random() * candidates.length)] || { x: 10, z: 5 };
+  }
+
+  function createRobot(id, gx, gz) {
+    const root = new THREE.Group();
+    const chassis = new THREE.Mesh(bodyGeo, bodyMat);
+    chassis.position.y = 0.14;
+    chassis.castShadow = true;
+    root.add(chassis);
+
+    const ring = new THREE.Mesh(ringGeo, matStateEmpty);
+    ring.position.y = 0.03;
+    root.add(ring);
+
+    const pod = new THREE.Mesh(podGeo, podCarryMat);
+    pod.position.y = 0.52;
+    pod.castShadow = true;
+    pod.visible = (id % 2 === 0);
+    root.add(pod);
+
+    const wPos = gridToWorld(gx, gz);
+    root.position.set(wPos.x, 0, wPos.z);
+    robotGroup.add(root);
+
+    // Path preview line
+    const lineMat = new THREE.LineBasicMaterial({
+      color: (id % 2 === 0) ? 0x10B981 : 0x38BDF8,
+      transparent: true,
+      opacity: 0.42
+    });
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(wPos.x, 0.05, wPos.z),
+      new THREE.Vector3(wPos.x, 0.05, wPos.z)
+    ]);
+    const pathLine = new THREE.Line(lineGeo, lineMat);
+    pathLineGroup.add(pathLine);
+
+    const carrying = (id % 2 === 0);
+    const goal = pickRandomGoal(carrying);
+
+    return {
+      id,
+      gx, gz,          // current tile
+      tx: gx, tz: gz,  // target next tile
+      progress: 0,
+      speed: 2.3 + (id % 7) * 0.12,
+      carrying,
+      yielding: false,
+      waitTicks: 0,
+      goalX: goal.x,
+      goalZ: goal.z,
+      path: [],
+      root,
+      ring,
+      pod,
+      pathLine
+    };
+  }
+
+  function updatePathLine(r) {
+    const pts = [];
+    pts.push(new THREE.Vector3(r.root.position.x, 0.04, r.root.position.z));
+    const maxPts = Math.min(r.path.length, 6);
+    for (let i = 0; i < maxPts; i++) {
+      const wp = gridToWorld(r.path[i].x, r.path[i].z);
+      pts.push(new THREE.Vector3(wp.x, 0.04, wp.z));
+    }
+    if (pts.length === 1) {
+      pts.push(pts[0].clone());
+    }
+    r.pathLine.geometry.setFromPoints(pts);
+  }
+
+  function spawnFleet(targetCount) {
+    // Clear existing
+    while (robotGroup.children.length) robotGroup.remove(robotGroup.children[0]);
+    while (pathLineGroup.children.length) pathLineGroup.remove(pathLineGroup.children[0]);
+    robots.length = 0;
+    for (let x = 0; x < COLS; x++) occupancyCount[x].fill(0);
+
+    const used = new Set();
+    let id = 0;
+    for (let x = 1; x < COLS - 1 && id < targetCount; x++) {
+      for (let z = 0; z < ROWS && id < targetCount; z++) {
+        if (obstacleMap[x][z]) continue;
+        if ((x + z * 3) % 2 === 0) {
+          const key = `${x},${z}`;
+          if (!used.has(key)) {
+            used.add(key);
+            const r = createRobot(id++, x, z);
+            occupancyCount[x][z] = 1;
+            r.path = findPathAStar(r.gx, r.gz, r.goalX, r.goalZ, r.id);
+            updatePathLine(r);
+            robots.push(r);
+          }
+        }
+      }
+    }
+    // Fill any remaining up to targetCount
+    for (let x = 1; x < COLS - 1 && id < targetCount; x++) {
+      for (let z = 0; z < ROWS && id < targetCount; z++) {
+        const key = `${x},${z}`;
+        if (!obstacleMap[x][z] && !used.has(key)) {
+          used.add(key);
+          const r = createRobot(id++, x, z);
+          occupancyCount[x][z] = 1;
+          r.path = findPathAStar(r.gx, r.gz, r.goalX, r.goalZ, r.id);
+          updatePathLine(r);
+          robots.push(r);
+        }
+      }
+    }
+    document.getElementById('hud-agv-count').textContent = `${robots.length} 대`;
+  }
+
+  let speedMultiplier = 1.0;
+
+  // Reservation table for collision-free multi-agent stepping
+  function stepSwarm(dt) {
+    // Build fast lookup of reserved tiles
+    const reserved = new Map();
+    for (const r of robots) {
+      reserved.set(`${r.gx},${r.gz}`, r.id);
+      reserved.set(`${r.tx},${r.tz}`, r.id);
+    }
+
+    let yieldCount = 0;
+
+    for (const r of robots) {
+      // Currently moving between (gx,gz) and (tx,tz)
+      if (r.gx !== r.tx || r.gz !== r.tz) {
+        r.progress += dt * r.speed * speedMultiplier;
+        if (r.progress >= 1.0) {
+          occupancyCount[r.gx][r.gz] = 0;
+          r.gx = r.tx;
+          r.gz = r.tz;
+          occupancyCount[r.gx][r.gz] = 1;
+          r.progress = 0;
+
+          // Reached goal?
+          if (r.gx === r.goalX && r.gz === r.goalZ) {
+            r.carrying = !r.carrying;
+            r.pod.visible = r.carrying;
+            if (!r.carrying) totalDeliveries++;
+            const nextGoal = pickRandomGoal(r.carrying);
+            r.goalX = nextGoal.x;
+            r.goalZ = nextGoal.z;
+            r.path = findPathAStar(r.gx, r.gz, r.goalX, r.goalZ, r.id);
+          }
+        } else {
+          const p0 = gridToWorld(r.gx, r.gz);
+          const p1 = gridToWorld(r.tx, r.tz);
+          r.root.position.x = p0.x + (p1.x - p0.x) * r.progress;
+          r.root.position.z = p0.z + (p1.z - p0.z) * r.progress;
+          updatePathLine(r);
+          continue;
+        }
+      }
+
+      // At tile center (gx, gz) -> acquire next step from path
+      if (!r.path || r.path.length === 0) {
+        const nextGoal = pickRandomGoal(r.carrying);
+        r.goalX = nextGoal.x;
+        r.goalZ = nextGoal.z;
+        r.path = findPathAStar(r.gx, r.gz, r.goalX, r.goalZ, r.id);
+      }
+
+      if (r.path.length > 0) {
+        const nextStep = r.path[0];
+        // Check if obstacle was dropped on nextStep
+        if (obstacleMap[nextStep.x][nextStep.z]) {
+          r.path = findPathAStar(r.gx, r.gz, r.goalX, r.goalZ, r.id);
+          totalReroutes++;
+          continue;
+        }
+
+        const nextKey = `${nextStep.x},${nextStep.z}`;
+        const holder = reserved.get(nextKey);
+
+        if (holder === undefined || holder === r.id) {
+          // Reserve tile immediately -> 0 collision guaranteed
+          reserved.set(nextKey, r.id);
+          r.tx = nextStep.x;
+          r.tz = nextStep.z;
+          r.path.shift();
+          r.yielding = false;
+          r.waitTicks = 0;
+          r.ring.material = r.carrying ? matStateCarry : matStateEmpty;
+        } else {
+          // Intersection occupied: yield smoothly or dynamically reroute around congestion
+          r.yielding = true;
+          yieldCount++;
+          r.waitTicks++;
+          r.ring.material = matStateYield;
+
+          if (r.waitTicks > 8) {
+            // Re-plan detour around busy intersection
+            r.path = findPathAStar(r.gx, r.gz, r.goalX, r.goalZ, r.id);
+            r.waitTicks = 0;
+            totalReroutes++;
+            rerouteLoadPulse = Math.min(99, rerouteLoadPulse + 8);
+          }
+        }
+      }
+
+      const wPos = gridToWorld(r.gx, r.gz);
+      r.root.position.x = wPos.x;
+      r.root.position.z = wPos.z;
+      updatePathLine(r);
+    }
+
+    document.getElementById('hud-yielding').textContent = `${yieldCount} 대`;
+    document.getElementById('hud-reroutes').textContent = `${totalReroutes} 회`;
+    document.getElementById('hud-deliveries').textContent = `${totalDeliveries} 박스`;
+    document.getElementById('hud-obstacles').textContent = `${obstacleMeshes.size} 개`;
+
+    // Live Speedometer, Throughput Tachometer, and 4 Bar Gauges
+    tickPhase += dt * 4.5;
+    rerouteLoadPulse = Math.max(18, rerouteLoadPulse - dt * 26);
+
+    const total = Math.max(1, robots.length);
+    const movingRatio = Math.max(0.15, (total - yieldCount) / total);
+    const carryCount = robots.reduce((acc, r) => acc + (r.carrying ? 1 : 0), 0);
+
+    // Dial 1: Average Fleet Velocity (m/s)
+    const wave = 0.14 * Math.sin(tickPhase * 1.3) + 0.08 * Math.cos(tickPhase * 2.4);
+    const avgSpd = Math.max(0.4, Math.min(5.2, 2.45 * speedMultiplier * movingRatio + wave));
+    const spdPct = Math.max(0, Math.min(1, avgSpd / 5.0));
+    const arcSpd = document.getElementById('agv-arc-spd');
+    const needleSpd = document.getElementById('agv-needle-spd');
+    if (arcSpd) arcSpd.setAttribute('stroke-dashoffset', (126 * (1 - spdPct)).toFixed(1));
+    if (needleSpd) {
+      const ang = Math.PI * (1 - spdPct);
+      needleSpd.setAttribute('x2', (50 + 34 * Math.cos(ang)).toFixed(1));
+      needleSpd.setAttribute('y2', (48 - 34 * Math.sin(ang)).toFixed(1));
+    }
+    const valSpdEl = document.getElementById('agv-val-spd');
+    if (valSpdEl) valSpdEl.textContent = avgSpd.toFixed(1) + ' m/s';
+
+    // Dial 2: Live Throughput (Boxes / min)
+    const tput = Math.round(Math.max(25, Math.min(320, total * 2.65 * speedMultiplier * movingRatio + 9 * Math.sin(tickPhase * 1.9))));
+    const tputPct = Math.max(0, Math.min(1, tput / 280));
+    const arcTput = document.getElementById('agv-arc-tput');
+    const needleTput = document.getElementById('agv-needle-tput');
+    if (arcTput) arcTput.setAttribute('stroke-dashoffset', (126 * (1 - tputPct)).toFixed(1));
+    if (needleTput) {
+      const ang2 = Math.PI * (1 - tputPct);
+      needleTput.setAttribute('x2', (50 + 34 * Math.cos(ang2)).toFixed(1));
+      needleTput.setAttribute('y2', (48 - 34 * Math.sin(ang2)).toFixed(1));
+    }
+    const valTputEl = document.getElementById('agv-val-tput');
+    if (valTputEl) valTputEl.textContent = tput + ' /분';
+
+    // 4 Dynamic Progress Bars
+    const congPct = Math.round(Math.max(12, Math.min(98, (total / 80) * 42 + obstacleMeshes.size * 5.5 + (yieldCount / total) * 90 + 5 * Math.sin(tickPhase * 1.6))));
+    const loadPct = Math.round(Math.max(14, Math.min(99, rerouteLoadPulse + 6 * Math.cos(tickPhase * 2.2))));
+    const yieldPct = Math.round(Math.max(2, Math.min(95, (yieldCount / total) * 100 + 3 * Math.abs(Math.sin(tickPhase)))));
+    const carryPct = Math.round((carryCount / total) * 100);
+
+    document.getElementById('agv-lbl-cong').textContent = congPct + '%';
+    document.getElementById('agv-bar-cong').style.width = congPct + '%';
+    document.getElementById('agv-lbl-load').textContent = loadPct + '%';
+    document.getElementById('agv-bar-load').style.width = loadPct + '%';
+    document.getElementById('agv-lbl-yield').textContent = yieldPct + '%';
+    document.getElementById('agv-bar-yield').style.width = yieldPct + '%';
+    document.getElementById('agv-lbl-carry').textContent = carryPct + '%';
+    document.getElementById('agv-bar-carry').style.width = carryPct + '%';
+  }
+
+  // Initial 50 AGV spawn
+  spawnFleet(50);
+
+  function triggerReroutesForObstacles() {
+    for (const r of robots) {
+      if (r.path.some(p => obstacleMap[p.x][p.z])) {
+        r.path = findPathAStar(r.tx, r.tz, r.goalX, r.goalZ, r.id);
+        totalReroutes++;
+        rerouteLoadPulse = Math.min(99, rerouteLoadPulse + 14);
+      }
+    }
+  }
+
+  // Interactive Controls
+  document.getElementById('btn-drop-obs').addEventListener('click', () => {
+    const candidates = [
+      [10, 4], [11, 4], [10, 5], [11, 5],
+      [10, 8], [11, 8], [9, 6], [12, 7],
+      [7, 4], [14, 8], [8, 9], [13, 5]
+    ];
+    let added = 0;
+    for (const [gx, gz] of candidates) {
+      if (!obstacleMap[gx][gz] && added < 4) {
+        setObstacle(gx, gz, true, added * 0.08);
+        added++;
+      }
+    }
+    rerouteLoadPulse = 92;
+    triggerReroutesForObstacles();
+  });
+
+  document.getElementById('btn-drop-mega').addEventListener('click', () => {
+    let added = 0;
+    for (let tries = 0; tries < 80 && added < 10; tries++) {
+      const gx = 2 + Math.floor(Math.random() * (COLS - 4));
+      const gz = 1 + Math.floor(Math.random() * (ROWS - 2));
+      if (!obstacleMap[gx][gz] && tileType[gx][gz] === 0) {
+        setObstacle(gx, gz, true, added * 0.06);
+        added++;
+      }
+    }
+    rerouteLoadPulse = 99;
+    triggerReroutesForObstacles();
+  });
+
+  document.getElementById('btn-clear-obs').addEventListener('click', () => {
+    for (let x = 0; x < COLS; x++) {
+      for (let z = 0; z < ROWS; z++) {
+        if (obstacleMap[x][z]) setObstacle(x, z, false);
+      }
+    }
+    rerouteLoadPulse = 25;
+  });
+
+  // Live Sliders
+  const sliderFleet = document.getElementById('slider-fleet');
+  sliderFleet.addEventListener('input', () => {
+    const cnt = parseInt(sliderFleet.value, 10);
+    document.getElementById('val-fleet').textContent = cnt + ' 대';
+    spawnFleet(cnt);
+    rerouteLoadPulse = Math.min(99, rerouteLoadPulse + 35);
+  });
+
+  const sliderSpeed = document.getElementById('slider-speed');
+  const btnSurge = document.getElementById('btn-surge');
+  sliderSpeed.addEventListener('input', () => {
+    speedMultiplier = parseFloat(sliderSpeed.value);
+    document.getElementById('val-speed').textContent = speedMultiplier.toFixed(2) + '×';
+    btnSurge.textContent = speedMultiplier > 1.8 ? '⚡ 폭주 가동 중 (클릭 시 1×)' : '⚡ 폭주 모드 (2.4×)';
+  });
+
+  const sliderDetour = document.getElementById('slider-detour');
+  sliderDetour.addEventListener('input', () => {
+    detourWeight = parseFloat(sliderDetour.value);
+    document.getElementById('val-detour').textContent = detourWeight.toFixed(1);
+    rerouteLoadPulse = Math.min(99, rerouteLoadPulse + 22);
+  });
+
+  const sliderGrav = document.getElementById('slider-grav');
+  sliderGrav.addEventListener('input', () => {
+    customGrav = parseFloat(sliderGrav.value);
+    document.getElementById('val-grav').textContent = customGrav + ' m/s²';
+  });
+
+  btnSurge.addEventListener('click', () => {
+    if (speedMultiplier < 1.8) {
+      speedMultiplier = 2.4;
+      sliderSpeed.value = '2.4';
+      document.getElementById('val-speed').textContent = '2.40×';
+      btnSurge.textContent = '⚡ 폭주 가동 중 (클릭 시 1×)';
+    } else {
+      speedMultiplier = 1.0;
+      sliderSpeed.value = '1.0';
+      document.getElementById('val-speed').textContent = '1.00×';
+      btnSurge.textContent = '⚡ 폭주 모드 (2.4×)';
+    }
+  });
+
+  const btnLines = document.getElementById('btn-toggle-lines');
+  btnLines.addEventListener('click', () => {
+    pathLineGroup.visible = !pathLineGroup.visible;
+    btnLines.textContent = pathLineGroup.visible ? '〰️ 경로선: ON' : '〰️ 경로선: OFF';
+  });
+
+  document.querySelectorAll('[data-cam]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-cam]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.cam;
+      controls.autoRotate = (mode === 'orbit');
+      controls.autoRotateSpeed = 1.6;
+      if (mode === 'iso' || mode === 'orbit') {
+        camera.position.set(0, 21.5, 19.5);
+        controls.target.set(0, 0, 0.5);
+      } else if (mode === 'top') {
+        camera.position.set(0, 29.0, 0.01);
+        controls.target.set(0, 0, 0);
+      } else if (mode === 'close') {
+        camera.position.set(3.5, 9.5, 8.5);
+        controls.target.set(0, 0, 0);
+      }
+      controls.update();
+    });
+  });
+
+  // Click floor tile to toggle obstacle
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let pointerDownPos = { x: 0, y: 0 };
+
+  renderer.domElement.addEventListener('pointerdown', e => {
+    pointerDownPos = { x: e.clientX, y: e.clientY };
+  });
+
+  renderer.domElement.addEventListener('pointerup', e => {
+    const dx = Math.abs(e.clientX - pointerDownPos.x);
+    const dy = Math.abs(e.clientY - pointerDownPos.y);
+    if (dx > 5 || dy > 5) return; // Ignore orbit drag
+
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(floorClickPlanes);
+    if (hits.length > 0) {
+      const { gx, gz } = hits[0].object.userData;
+      setObstacle(gx, gz, !obstacleMap[gx][gz]);
+      rerouteLoadPulse = Math.min(99, rerouteLoadPulse + 30);
+      triggerReroutesForObstacles();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Hands-Free TV Presentation Auto-Choreography Loop (16s cycle)
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.55;
+
+  function setAutoStageUI(activeIdx, bannerText) {
+    for (let i = 0; i < 4; i++) {
+      const box = document.getElementById('auto-st-' + i);
+      const bdg = document.getElementById('auto-b-' + i);
+      if (box) {
+        const isAct = (i === activeIdx);
+        box.style.borderColor = isAct ? (i === 1 || i === 2 ? '#EF4444' : '#FFFFFF') : 'rgba(255,255,255,0.16)';
+        box.style.background = isAct ? (i === 1 || i === 2 ? 'rgba(220,38,38,0.22)' : 'rgba(255,255,255,0.12)') : 'rgba(24,24,27,0.9)';
+      }
+      if (bdg) {
+        bdg.textContent = (i === activeIdx) ? '● 진행 중' : '대기';
+        bdg.style.color = (i === activeIdx) ? '#FFFFFF' : '#A3A3A3';
+      }
+    }
+    const tb = document.getElementById('toast-banner');
+    if (tb && bannerText) tb.textContent = bannerText;
+  }
+
+  function runAgvAutoCycle() {
+    setAutoStageUI(0, '● 자동 시연 [1/4] · 50대 자율주행 물류 로봇 최적 경로 주행 중');
+    setTimeout(() => {
+      document.getElementById('btn-drop-obs')?.click();
+      setAutoStageUI(1, '● 자동 시연 [2/4] · 중앙 통로 장애물 4개 낙하 → 전 로봇 실시간 A* 즉시 우회');
+    }, 1600);
+    setTimeout(() => {
+      document.getElementById('btn-drop-mega')?.click();
+      setAutoStageUI(2, '● 자동 시연 [3/4] · 다중 구역 연쇄 장애물 투하 → 충돌 0건 우회 경로 재계산');
+    }, 6800);
+    setTimeout(() => {
+      document.getElementById('btn-clear-obs')?.click();
+      setAutoStageUI(3, '● 자동 시연 [4/4] · 장애물 회수 완료 → 전 통로 최단 경로 복구');
+    }, 12400);
+  }
+  runAgvAutoCycle();
+  setInterval(runAgvAutoCycle, 16000);
+
+  let lastTime = performance.now();
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+
+    stepObstacleGravity(dt);
+    stepSwarm(dt);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
